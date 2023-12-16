@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: numaflow-dex-server
+  labels:
+    {{- include "numaflow.labels" . | nindent 4 }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+    - port: 5556
+      targetPort: 5556
+  selector:
+    app.kubernetes.io/component: dex-server
+    app.kubernetes.io/name: numaflow-dex-server
+    app.kubernetes.io/part-of: numaflow
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: numaflow-server
+  labels:
+    {{- include "numaflow.labels" . | nindent 4 }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+    - port: 8443
+      targetPort: 8443
+  selector:
+    app.kubernetes.io/component: numaflow-ux
+    app.kubernetes.io/name: numaflow-ux
+    app.kubernetes.io/part-of: numaflow
+  type: ClusterIP

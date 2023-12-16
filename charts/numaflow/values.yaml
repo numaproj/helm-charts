@@ -1,0 +1,188 @@
+# Default values for numaflow.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+controller:
+  name: numaflow-controller
+  image:
+    repository: quay.io/numaproj/numaflow
+    tag: v1.0.0
+    pullPolicy: Always
+  # The number of controller replicas to run.
+  replicaCount: 1
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1024Mi
+    requests:
+      cpu: 100m
+      memory: 200Mi
+  configMap:
+    # The name of the ConfigMap containing the controller configuration.
+    name: numaflow-controller-config
+  serviceAccount: numaflow-sa
+
+dexServer:
+  name: numaflow-dex-server
+  image:
+    repository: dexidp/dex
+    tag: v2.37.0
+    pullPolicy: Always
+  # The number of dex-server replicas to run.
+  replicaCount: 1
+  configMap: numaflow-dex-server-config
+  serviceAccount: numaflow-dex-server
+  secret:
+    name: numaflow-dex-secrets
+    data:
+      GITHUB_CLIENT_ID: ""
+      GITHUB_CLIENT_SECRET: ""
+
+server:
+  name: numaflow-server
+  image:
+    repository: quay.io/numaproj/numaflow
+    tag: v1.0.0
+    pullPolicy: Always
+  # The number of server replicas to run.
+  replicaCount: 1
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1024Mi
+    requests:
+      cpu: 100m
+      memory: 200Mi
+  serviceAccount: numaflow-server-sa
+  volumeMounts:
+    - mountPath: /ui/build/runtime-env.js
+      name: env-volume
+      subPath: runtime-env.js
+    - mountPath: /ui/build/index.html
+      name: env-volume
+      subPath: index.html
+    - mountPath: /etc/numaflow
+      name: rbac-config
+  rbacConfigName: numaflow-server-rbac-config
+  cmdConfigName: numaflow-server-cmd-params-config
+  envsFromConfigMap:
+    - name: NUMAFLOW_SERVER_INSECURE
+      key: server.insecure
+      optional: true
+    - name: NUMAFLOW_SERVER_PORT_NUMBER
+      key: server.port
+      optional: true
+    - name: NUMAFLOW_SERVER_NAMESPACED
+      key: server.namespaced
+      optional: true
+    - name: NUMAFLOW_SERVER_MANAGED_NAMESPACE
+      key: server.managed.namespace
+      optional: true
+    - name: NUMAFLOW_SERVER_BASE_HREF
+      key: server.base.href
+      optional: true
+    - name: NUMAFLOW_SERVER_DISABLE_AUTH
+      key: server.disable.auth
+      optional: true
+    - name: NUMAFLOW_SERVER_DEX_SERVER_ADDR
+      key: server.dex.server
+      optional: true
+    - name: NUMAFLOW_SERVER_ADDRESS
+      key: server.address
+      optional: true
+
+
+#replicaCount: 1
+#
+#image:
+#  repository: nginx
+#  pullPolicy: IfNotPresent
+#  # Overrides the image tag whose default is the chart appVersion.
+#  tag: ""
+#
+#imagePullSecrets: []
+#nameOverride: ""
+#fullnameOverride: ""
+#
+#serviceAccount:
+#  # Specifies whether a service account should be created
+#  create: true
+#  # Automatically mount a ServiceAccount's API credentials?
+#  automount: true
+#  # Annotations to add to the service account
+#  annotations: {}
+#  # The name of the service account to use.
+#  # If not set and create is true, a name is generated using the fullname template
+#  name: ""
+#
+#podAnnotations: {}
+#podLabels: {}
+#
+#podSecurityContext: {}
+#  # fsGroup: 2000
+#
+#securityContext: {}
+#  # capabilities:
+#  #   drop:
+#  #   - ALL
+#  # readOnlyRootFilesystem: true
+#  # runAsNonRoot: true
+#  # runAsUser: 1000
+#
+#service:
+#  type: ClusterIP
+#  port: 80
+#
+#ingress:
+#  enabled: false
+#  className: ""
+#  annotations: {}
+#    # kubernetes.io/ingress.class: nginx
+#    # kubernetes.io/tls-acme: "true"
+#  hosts:
+#    - host: chart-example.local
+#      paths:
+#        - path: /
+#          pathType: ImplementationSpecific
+#  tls: []
+#  #  - secretName: chart-example-tls
+#  #    hosts:
+#  #      - chart-example.local
+#
+#resources: {}
+#  # We usually recommend not to specify default resources and to leave this as a conscious
+#  # choice for the user. This also increases chances charts run on environments with little
+#  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+#  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+#  # limits:
+#  #   cpu: 100m
+#  #   memory: 128Mi
+#  # requests:
+#  #   cpu: 100m
+#  #   memory: 128Mi
+#
+#autoscaling:
+#  enabled: false
+#  minReplicas: 1
+#  maxReplicas: 100
+#  targetCPUUtilizationPercentage: 80
+#  # targetMemoryUtilizationPercentage: 80
+#
+## Additional volumes on the output Deployment definition.
+#volumes: []
+## - name: foo
+##   secret:
+##     secretName: mysecret
+##     optional: false
+#
+## Additional volumeMounts on the output Deployment definition.
+#volumeMounts: []
+## - name: foo
+##   mountPath: "/etc/foo"
+##   readOnly: true
+#
+#nodeSelector: {}
+#
+#tolerations: []
+#
+#affinity: {}
