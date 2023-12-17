@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: numaflow-dex-server
+  name: {{ .Values.dexServer.name }}
   labels:
     {{- include "numaflow.labels" . | nindent 4 }}
   namespace: {{ .Release.Namespace }}
@@ -17,7 +17,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: numaflow-server
+  name: {{ .Values.server.name}}
   labels:
     {{- include "numaflow.labels" . | nindent 4 }}
   namespace: {{ .Release.Namespace }}
