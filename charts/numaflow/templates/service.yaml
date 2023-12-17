@@ -23,10 +23,10 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   ports:
-    - port: 8443
-      targetPort: 8443
+    - port: {{ .Values.server.service.port }}
+      targetPort: {{ .Values.server.service.port }}
   selector:
-    app.kubernetes.io/component: numaflow-ux
-    app.kubernetes.io/name: numaflow-ux
+    app.kubernetes.io/component: ux-server
+    app.kubernetes.io/name: numaflow-server
     app.kubernetes.io/part-of: numaflow
-  type: ClusterIP
+  type: {{ .Values.server.service.type }}

@@ -216,8 +216,8 @@ kind: ClusterRole
 metadata:
   labels:
     {{- include "numaflow.labels" . | nindent 4 }}
-    app.kubernetes.io/component: numaflow-ux
-    app.kubernetes.io/name: numaflow-ux
+    app.kubernetes.io/component: ux-server
+    app.kubernetes.io/name: numaflow-server
     app.kubernetes.io/part-of: numaflow
   name: {{ .Values.server.name }}-role
 rules:

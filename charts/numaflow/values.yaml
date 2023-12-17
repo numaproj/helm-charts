@@ -114,3 +114,6 @@ server:
     - name: NUMAFLOW_SERVER_ADDRESS
       key: server.address
       optional: true
+  service:
+    type: ClusterIP
+    port: 8443
