@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.controller.name }}
+  name: numaflow-controller
   labels:
     {{- include "numaflow.labels" . | nindent 4 }}
   namespace: {{ .Release.Namespace }}
@@ -24,13 +24,13 @@ spec:
             - controller
           env:
             - name: NUMAFLOW_IMAGE
-              value: {{ .Values.controller.image.repository }}:{{ .Values.controller.image.tag }}
+              value: {{ .Values.numaflow.image.repository }}:{{ .Values.numaflow.image.tag }}
             - name: NAMESPACE
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
-          image: {{ .Values.controller.image.repository }}:{{ .Values.controller.image.tag }}
-          imagePullPolicy: {{ .Values.controller.image.pullPolicy }}
+          image: {{ .Values.numaflow.image.repository }}:{{ .Values.numaflow.image.tag }}
+          imagePullPolicy: {{ .Values.numaflow.image.pullPolicy }}
           livenessProbe:
             httpGet:
               path: /healthz
@@ -52,10 +52,10 @@ spec:
       securityContext:
         runAsNonRoot: true
         runAsUser: 9737
-      serviceAccountName: {{ .Values.controller.serviceAccount }}
+      serviceAccountName: numaflow-sa
       volumes:
         - configMap:
-            name: {{ .Values.controller.configMap.name }}
+            name: numaflow-controller-config
           name: controller-config-volume
 ---
 apiVersion: apps/v1
@@ -102,7 +102,7 @@ spec:
           volumeMounts:
             - mountPath: /etc/numaflow/dex/cfg
               name: config
-      serviceAccountName: {{ .Values.dexServer.serviceAccount }}
+      serviceAccountName: numaflow-dex-server
       volumes:
         - configMap:
             items:
@@ -140,16 +140,56 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
-            {{- range $value := .Values.server.envsFromConfigMap }}
-            - name: {{ $value.name }}
+            - name: NUMAFLOW_SERVER_INSECURE
               valueFrom:
                 configMapKeyRef:
-                  key: {{ $value.key}}
-                  name: {{ $.Values.server.cmdConfigName }}
-                  optional: {{ $value.optional }}
-            {{- end }}
-          image: {{ .Values.server.image.repository }}:{{ .Values.server.image.tag }}
-          imagePullPolicy: {{ .Values.server.image.pullPolicy }}
+                  key: server.insecure
+                  name: numaflow-cmd-params-config
+                  optional: true
+            - name: NUMAFLOW_SERVER_PORT_NUMBER
+              valueFrom:
+                configMapKeyRef:
+                  key: server.port
+                  name: numaflow-cmd-params-config
+                  optional: true
+            - name: NUMAFLOW_SERVER_NAMESPACED
+              valueFrom:
+                configMapKeyRef:
+                  key: namespaced
+                  name: numaflow-cmd-params-config
+                  optional: true
+            - name: NUMAFLOW_SERVER_MANAGED_NAMESPACE
+              valueFrom:
+                configMapKeyRef:
+                  key: managed.namespace
+                  name: numaflow-cmd-params-config
+                  optional: true
+            - name: NUMAFLOW_SERVER_BASE_HREF
+              valueFrom:
+                configMapKeyRef:
+                  key: server.base.href
+                  name: numaflow-cmd-params-config
+                  optional: true
+            - name: NUMAFLOW_SERVER_DISABLE_AUTH
+              valueFrom:
+                configMapKeyRef:
+                  key: server.disable.auth
+                  name: numaflow-cmd-params-config
+                  optional: true
+            - name: NUMAFLOW_SERVER_DEX_SERVER_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  key: server.dex.server
+                  name: numaflow-cmd-params-config
+                  optional: true
+            - name: NUMAFLOW_SERVER_ADDRESS
+              valueFrom:
+                configMapKeyRef:
+                  key: server.address
+                  name: numaflow-cmd-params-config
+                  optional: true
+          image: {{ .Values.numaflow.image.repository }}:{{ .Values.numaflow.image.tag }}
+          imagePullPolicy: {{ .Values.numaflow.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.server.service.port }}
           livenessProbe:
@@ -162,10 +202,15 @@ spec:
           name: main
           resources:
             {{- toYaml .Values.server.resources | nindent 12 }}
-          {{- with .Values.server.volumeMounts }}
           volumeMounts:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
+            - mountPath: /ui/build/runtime-env.js
+              name: env-volume
+              subPath: runtime-env.js
+            - mountPath: /ui/build/index.html
+              name: env-volume
+              subPath: index.html
+            - mountPath: /etc/numaflow
+              name: rbac-config
       initContainers:
         - args:
             - server-init
@@ -176,8 +221,8 @@ spec:
                   key: server.base.href
                   name: {{ .Values.server.cmdConfigName }}
                   optional: true
-          image: {{ .Values.server.image.repository }}:{{ .Values.server.image.tag }}
-          imagePullPolicy: {{ .Values.server.image.pullPolicy }}
+          image: {{ .Values.numaflow.image.repository }}:{{ .Values.numaflow.image.tag }}
+          imagePullPolicy: {{ .Values.numaflow.image.pullPolicy }}
           name: server-init
           volumeMounts:
             - mountPath: /opt/numaflow
@@ -185,10 +230,54 @@ spec:
       securityContext:
         runAsNonRoot: true
         runAsUser: 9737
-      serviceAccountName: {{ .Values.server.serviceAccount }}
+      serviceAccountName: numaflow-server-sa
       volumes:
         - emptyDir: {}
           name: env-volume
         - configMap:
-            name: {{ .Values.server.rbacConfigName }}
+            name: numaflow-server-rbac-config
           name: rbac-config
+
+### numaflow server validating webhook
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: numaflow-webhook
+  labels:
+      {{- include "numaflow.labels" . | nindent 4 }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: numaflow-webhook
+      app.kubernetes.io/name: numaflow-webhook
+      app.kubernetes.io/part-of: numaflow
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: numaflow-webhook
+        app.kubernetes.io/name: numaflow-webhook
+        app.kubernetes.io/part-of: numaflow
+    spec:
+      containers:
+        - args:
+            - webhook-service
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: PORT
+              value: "443"
+            - name: DEPLOYMENT_NAME
+              value: numaflow-webhook
+            - name: SERVICE_NAME
+              value: numaflow-webhook
+            - name: CLUSTER_ROLE_NAME
+              value: numaflow-webhook
+          image: {{ .Values.numaflow.image.repository }}:{{ .Values.numaflow.image.tag }}
+          imagePullPolicy: {{ .Values.numaflow.image.pullPolicy }}
+          name: webhook
+      serviceAccountName: numaflow-webhook-sa

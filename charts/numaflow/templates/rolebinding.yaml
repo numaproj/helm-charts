@@ -14,7 +14,7 @@ roleRef:
   name: {{ .Values.dexServer.name }}
 subjects:
   - kind: ServiceAccount
-    name: {{ .Values.dexServer.serviceAccount }}
+    name: numaflow-dex-server
     namespace: {{ .Release.Namespace }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -32,7 +32,7 @@ roleRef:
   name: numaflow-role
 subjects:
   - kind: ServiceAccount
-    name: {{ .Values.controller.serviceAccount }}
+    name: numaflow-sa
     namespace: {{ .Release.Namespace }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -50,5 +50,26 @@ roleRef:
   name: numaflow-server-role
 subjects:
   - kind: ServiceAccount
-    name: {{ .Values.server.serviceAccount }}
+    name: numaflow-server-sa
     namespace: {{ .Release.Namespace }}
+
+### ClusterRoleBinding for validating webhook
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    {{- include "numaflow.labels" . | nindent 4 }}
+    app.kubernetes.io/component: numaflow-webhook
+    app.kubernetes.io/name: numaflow-webhook
+    app.kubernetes.io/part-of: numaflow
+  name: numaflow-webhook-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: numaflow-webhook
+subjects:
+  - kind: ServiceAccount
+    name: numaflow-webhook-sa
+    namespace: {{ .Release.Namespace }}
+---

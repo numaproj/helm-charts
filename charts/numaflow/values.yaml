@@ -2,12 +2,13 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-controller:
-  name: numaflow-controller
+numaflow:
   image:
     repository: quay.io/numaproj/numaflow
     tag: v1.0.0
     pullPolicy: Always
+
+controller:
   # The number of controller replicas to run.
   replicaCount: 1
   resources:
@@ -19,7 +20,6 @@ controller:
       memory: 200Mi
   configMap:
     # The name of the ConfigMap containing the controller configuration.
-    name: numaflow-controller-config
     jetstream:
       versions:
         - version: latest
@@ -44,7 +44,6 @@ controller:
           natsImage: nats:2.9.15
         - version: 2.10.3
           natsImage: nats:2.10.3
-  serviceAccount: numaflow-sa
 
 dexServer:
   name: numaflow-dex-server
@@ -64,10 +63,6 @@ dexServer:
 
 server:
   name: numaflow-server
-  image:
-    repository: quay.io/numaproj/numaflow
-    tag: v1.0.0
-    pullPolicy: Always
   # The number of server replicas to run.
   replicaCount: 1
   resources:
@@ -77,43 +72,25 @@ server:
     requests:
       cpu: 100m
       memory: 200Mi
-  serviceAccount: numaflow-server-sa
-  volumeMounts:
-    - mountPath: /ui/build/runtime-env.js
-      name: env-volume
-      subPath: runtime-env.js
-    - mountPath: /ui/build/index.html
-      name: env-volume
-      subPath: index.html
-    - mountPath: /etc/numaflow
-      name: rbac-config
-  rbacConfigName: numaflow-server-rbac-config
-  cmdConfigName: numaflow-server-cmd-params-config
-  envsFromConfigMap:
-    - name: NUMAFLOW_SERVER_INSECURE
-      key: server.insecure
-      optional: true
-    - name: NUMAFLOW_SERVER_PORT_NUMBER
-      key: server.port
-      optional: true
-    - name: NUMAFLOW_SERVER_NAMESPACED
-      key: server.namespaced
-      optional: true
-    - name: NUMAFLOW_SERVER_MANAGED_NAMESPACE
-      key: server.managed.namespace
-      optional: true
-    - name: NUMAFLOW_SERVER_BASE_HREF
-      key: server.base.href
-      optional: true
-    - name: NUMAFLOW_SERVER_DISABLE_AUTH
-      key: server.disable.auth
-      optional: true
-    - name: NUMAFLOW_SERVER_DEX_SERVER_ADDR
-      key: server.dex.server
-      optional: true
-    - name: NUMAFLOW_SERVER_ADDRESS
-      key: server.address
-      optional: true
+  configs:
+    ### Whether to run the controller and the UX server in namespaced scope, defaults to false.
+    namespacedScope: false
+    ### The namespace that the controller and the UX server watch when "namespaced" is true.
+    managedNamespace: numaflow-system
+    ### Whether to disable leader election for the controller, defaults to false
+    leaderElection: false
+    ### Whether to disable TLS for UX server.
+    insecure: false
+    ### Port to listen on for UX server, defaults to 8443 or 8080 if insecure is set.
+    port: 8443
+    ### Base href for Numaflow UX server, defaults to '/'.
+    baseHref: /
+    ### Whether to disable authentication and authorization for the UX server, defaults to false.
+    authDisable: false
+    ### The address of the Dex server for authentication.
+    dexServer: http://numaflow-dex-server:5556/dex
+    ### The external address of the Numaflow server. This is needed when using Dex for authentication.
+    address: https://localhost:8443
   service:
     type: ClusterIP
     port: 8443
