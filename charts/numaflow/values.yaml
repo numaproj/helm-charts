@@ -19,7 +19,6 @@ controller:
       cpu: 100m
       memory: 200Mi
   configMap:
-    # The name of the ConfigMap containing the controller configuration.
     jetstream:
       versions:
         - version: latest

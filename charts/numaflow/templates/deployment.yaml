@@ -219,7 +219,7 @@ spec:
               valueFrom:
                 configMapKeyRef:
                   key: server.base.href
-                  name: {{ .Values.server.cmdConfigName }}
+                  name: numaflow-cmd-params-config
                   optional: true
           image: {{ .Values.numaflow.image.repository }}:{{ .Values.numaflow.image.tag }}
           imagePullPolicy: {{ .Values.numaflow.image.pullPolicy }}
