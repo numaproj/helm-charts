@@ -1,0 +1,283 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: numaflow-controller
+  labels:
+    {{- include "numaflow.labels" . | nindent 4 }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: {{ .Values.controller.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: controller-manager
+      app.kubernetes.io/name: controller-manager
+      app.kubernetes.io/part-of: numaflow
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: controller-manager
+        app.kubernetes.io/name: controller-manager
+        app.kubernetes.io/part-of: numaflow
+    spec:
+      containers:
+        - args:
+            - controller
+          env:
+            - name: NUMAFLOW_IMAGE
+              value: {{ .Values.numaflow.image.repository }}:{{ .Values.numaflow.image.tag }}
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          image: {{ .Values.numaflow.image.repository }}:{{ .Values.numaflow.image.tag }}
+          imagePullPolicy: {{ .Values.numaflow.image.pullPolicy }}
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8081
+            initialDelaySeconds: 3
+            periodSeconds: 3
+          name: controller-manager
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8081
+            initialDelaySeconds: 3
+            periodSeconds: 3
+          resources:
+            {{- toYaml .Values.controller.resources | nindent 12 }}
+          volumeMounts:
+            - mountPath: /etc/numaflow
+              name: controller-config-volume
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 9737
+      serviceAccountName: numaflow-sa
+      volumes:
+        - configMap:
+            name: numaflow-controller-config
+          name: controller-config-volume
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.dexServer.name }}
+  labels:
+    {{- include "numaflow.labels" . | nindent 4 }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: dex-server
+      app.kubernetes.io/name: numaflow-dex-server
+      app.kubernetes.io/part-of: numaflow
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: dex-server
+        app.kubernetes.io/name: numaflow-dex-server
+        app.kubernetes.io/part-of: numaflow
+    spec:
+      containers:
+        - command:
+            - /usr/local/bin/dex
+            - serve
+            - /etc/numaflow/dex/cfg/config.yaml
+          env:
+            - name: GITHUB_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  key: dex-github-client-id
+                  name: {{ .Values.dexServer.secret.name }}
+            - name: GITHUB_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: dex-github-client-secret
+                  name: {{ .Values.dexServer.secret.name }}
+          image: {{ .Values.dexServer.image.repository }}:{{ .Values.dexServer.image.tag }}
+          imagePullPolicy: {{ .Values.dexServer.image.pullPolicy }}
+          name: dex
+          ports:
+            - containerPort: 5556
+          volumeMounts:
+            - mountPath: /etc/numaflow/dex/cfg
+              name: config
+      serviceAccountName: numaflow-dex-server
+      volumes:
+        - configMap:
+            items:
+              - key: config.yaml
+                path: config.yaml
+            name: {{ .Values.dexServer.configMap }}
+          name: config
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.server.name }}
+  labels:
+    {{- include "numaflow.labels" . | nindent 4 }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: {{ .Values.server.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: ux-server
+      app.kubernetes.io/name: numaflow-server
+      app.kubernetes.io/part-of: numaflow
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: ux-server
+        app.kubernetes.io/name: numaflow-server
+        app.kubernetes.io/part-of: numaflow
+    spec:
+      containers:
+        - args:
+            - server
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: NUMAFLOW_SERVER_INSECURE
+              valueFrom:
+                configMapKeyRef:
+                  key: server.insecure
+                  name: numaflow-cmd-params-config
+                  optional: true
+            - name: NUMAFLOW_SERVER_PORT_NUMBER
+              valueFrom:
+                configMapKeyRef:
+                  key: server.port
+                  name: numaflow-cmd-params-config
+                  optional: true
+            - name: NUMAFLOW_SERVER_NAMESPACED
+              valueFrom:
+                configMapKeyRef:
+                  key: namespaced
+                  name: numaflow-cmd-params-config
+                  optional: true
+            - name: NUMAFLOW_SERVER_MANAGED_NAMESPACE
+              valueFrom:
+                configMapKeyRef:
+                  key: managed.namespace
+                  name: numaflow-cmd-params-config
+                  optional: true
+            - name: NUMAFLOW_SERVER_BASE_HREF
+              valueFrom:
+                configMapKeyRef:
+                  key: server.base.href
+                  name: numaflow-cmd-params-config
+                  optional: true
+            - name: NUMAFLOW_SERVER_DISABLE_AUTH
+              valueFrom:
+                configMapKeyRef:
+                  key: server.disable.auth
+                  name: numaflow-cmd-params-config
+                  optional: true
+            - name: NUMAFLOW_SERVER_DEX_SERVER_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  key: server.dex.server
+                  name: numaflow-cmd-params-config
+                  optional: true
+            - name: NUMAFLOW_SERVER_ADDRESS
+              valueFrom:
+                configMapKeyRef:
+                  key: server.address
+                  name: numaflow-cmd-params-config
+                  optional: true
+          image: {{ .Values.numaflow.image.repository }}:{{ .Values.numaflow.image.tag }}
+          imagePullPolicy: {{ .Values.numaflow.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.server.service.port }}
+          livenessProbe:
+            httpGet:
+              path: /livez
+              port: 8443
+              scheme: HTTPS
+            initialDelaySeconds: 3
+            periodSeconds: 3
+          name: main
+          resources:
+            {{- toYaml .Values.server.resources | nindent 12 }}
+          volumeMounts:
+            - mountPath: /ui/build/runtime-env.js
+              name: env-volume
+              subPath: runtime-env.js
+            - mountPath: /ui/build/index.html
+              name: env-volume
+              subPath: index.html
+            - mountPath: /etc/numaflow
+              name: rbac-config
+      initContainers:
+        - args:
+            - server-init
+          env:
+            - name: NUMAFLOW_SERVER_BASE_HREF
+              valueFrom:
+                configMapKeyRef:
+                  key: server.base.href
+                  name: numaflow-cmd-params-config
+                  optional: true
+          image: {{ .Values.numaflow.image.repository }}:{{ .Values.numaflow.image.tag }}
+          imagePullPolicy: {{ .Values.numaflow.image.pullPolicy }}
+          name: server-init
+          volumeMounts:
+            - mountPath: /opt/numaflow
+              name: env-volume
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 9737
+      serviceAccountName: numaflow-server-sa
+      volumes:
+        - emptyDir: {}
+          name: env-volume
+        - configMap:
+            name: numaflow-server-rbac-config
+          name: rbac-config
+
+### numaflow server validating webhook
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: numaflow-webhook
+  labels:
+      {{- include "numaflow.labels" . | nindent 4 }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: numaflow-webhook
+      app.kubernetes.io/name: numaflow-webhook
+      app.kubernetes.io/part-of: numaflow
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: numaflow-webhook
+        app.kubernetes.io/name: numaflow-webhook
+        app.kubernetes.io/part-of: numaflow
+    spec:
+      containers:
+        - args:
+            - webhook-service
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: PORT
+              value: "443"
+            - name: DEPLOYMENT_NAME
+              value: numaflow-webhook
+            - name: SERVICE_NAME
+              value: numaflow-webhook
+            - name: CLUSTER_ROLE_NAME
+              value: numaflow-webhook
+          image: {{ .Values.numaflow.image.repository }}:{{ .Values.numaflow.image.tag }}
+          imagePullPolicy: {{ .Values.numaflow.image.pullPolicy }}
+          name: webhook
+      serviceAccountName: numaflow-webhook-sa

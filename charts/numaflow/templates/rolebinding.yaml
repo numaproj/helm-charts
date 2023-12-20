@@ -1,0 +1,75 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    {{- include "numaflow.labels" . | nindent 4 }}
+    app.kubernetes.io/component: dex-server
+    app.kubernetes.io/name: numaflow-dex-server
+    app.kubernetes.io/part-of: numaflow
+  name: {{ .Values.dexServer.name }}
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ .Values.dexServer.name }}
+subjects:
+  - kind: ServiceAccount
+    name: numaflow-dex-server
+    namespace: {{ .Release.Namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    {{- include "numaflow.labels" . | nindent 4 }}
+    app.kubernetes.io/component: controller-manager
+    app.kubernetes.io/name: numaflow-controller-manager
+    app.kubernetes.io/part-of: numaflow
+  name: numaflow-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: numaflow-role
+subjects:
+  - kind: ServiceAccount
+    name: numaflow-sa
+    namespace: {{ .Release.Namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    {{- include "numaflow.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ux-server
+    app.kubernetes.io/name: numaflow-server
+    app.kubernetes.io/part-of: numaflow
+  name: numaflow-server-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: numaflow-server-role
+subjects:
+  - kind: ServiceAccount
+    name: numaflow-server-sa
+    namespace: {{ .Release.Namespace }}
+
+### ClusterRoleBinding for validating webhook
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    {{- include "numaflow.labels" . | nindent 4 }}
+    app.kubernetes.io/component: numaflow-webhook
+    app.kubernetes.io/name: numaflow-webhook
+    app.kubernetes.io/part-of: numaflow
+  name: numaflow-webhook-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: numaflow-webhook
+subjects:
+  - kind: ServiceAccount
+    name: numaflow-webhook-sa
+    namespace: {{ .Release.Namespace }}
+---

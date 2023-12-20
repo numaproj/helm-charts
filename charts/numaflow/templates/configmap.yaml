@@ -1,0 +1,151 @@
+apiVersion: v1
+data:
+  controller-config.yaml: |
+    isbsvc:
+      redis:
+        # Default Redis settings, could be overridden by InterStepBufferService specs
+        settings:
+          # Redis config shared by both master and replicas
+          redis: |
+            min-replicas-to-write 1
+            # Disable RDB persistence, AOF persistence already enabled.
+            save ""
+            # Enable AOF https://redis.io/topics/persistence#append-only-file
+            appendonly yes
+            auto-aof-rewrite-percentage 100
+            auto-aof-rewrite-min-size 64mb
+            maxmemory 512mb
+            maxmemory-policy allkeys-lru
+          # Special config only used by master
+          master: ""
+          # Special config only used by replicas
+          replica: ""
+          # Sentinel config
+          sentinel: |
+            sentinel down-after-milliseconds mymaster 10000
+            sentinel failover-timeout mymaster 2000
+            sentinel parallel-syncs mymaster 1
+        versions:
+          - version: 7.0.11
+            redisImage: bitnami/redis:7.0.11-debian-11-r3
+            sentinelImage: bitnami/redis-sentinel:7.0.11-debian-11-r3
+            redisExporterImage: bitnami/redis-exporter:1.50.0-debian-11-r4
+            initContainerImage: debian:latest
+      jetstream:
+        # Default JetStream settings, could be overridden by InterStepBufferService specs
+        settings: |
+          # https://docs.nats.io/running-a-nats-service/configuration#limits
+          # Only support to configure "max_payload".
+          # Max payload size in bytes, defaults to 1 MB. It is not recommended to use values over 8MB but max_payload can be set up to 64MB.
+          max_payload: 1048576
+          # https://docs.nats.io/running-a-nats-service/configuration#jetstream
+          # Only configure "max_memory_store" or "max_file_store", do not set "store_dir" as it has been hardcoded.
+          # e.g. 1G. -1 means no limit, up to 75% of available memory. This only take effect for streams created using memory storage.
+          max_memory_store: -1
+          # e.g. 20G. -1 means no limit, Up to 1TB if available
+          max_file_store: 1TB
+        bufferConfig: |
+          # The default properties of the buffers (streams) to be created in this JetStream service
+          stream:
+            # 0: Limits, 1: Interest, 2: WorkQueue
+            retention: 0
+            maxMsgs: 100000
+            maxAge: 72h
+            maxBytes: -1
+            # 0: File, 1: Memory
+            storage: 0
+            replicas: 3
+            duplicates: 60s
+          # The default consumer properties for the created streams
+          consumer:
+            ackWait: 60s
+            maxAckPending: 25000
+          otBucket:
+            maxValueSize: 0
+            history: 1
+            ttl: 3h
+            maxBytes: 0
+            # 0: File, 1: Memory
+            storage: 0
+            replicas: 3
+          procBucket:
+            maxValueSize: 0
+            history: 1
+            ttl: 72h
+            maxBytes: 0
+            # 0: File, 1: Memory
+            storage: 0
+            replicas: 3
+        {{- range $value := .Values.controller.configMap.jetstream.versions }}
+        versions:
+          - version: {{ $value.version }}
+            natsImage: {{ $value.natsImage }}
+            metricsExporterImage: natsio/prometheus-nats-exporter:0.9.1
+            configReloaderImage: natsio/nats-server-config-reloader:0.7.0
+            startCommand: /nats-server
+        {{- end }}
+kind: ConfigMap
+metadata:
+  name: numaflow-controller-config
+  labels:
+    {{- include "numaflow.labels" . | nindent 4 }}
+  namespace: {{ .Release.Namespace }}
+---
+apiVersion: v1
+data:
+  config.yaml: "issuer: <HOSTNAME>/dex\nstorage:\n  type: memory\nweb:\n  http: 0.0.0.0:5556\nstaticClients:\n
+    \ - id: numaflow-server-app\n    redirectURIs: \n      - <HOSTNAME>/<base_href>/login\n
+    \   name: 'Numaflow Server App'\n    public: true\nconnectors:\n- type: github\n
+    \ # https://dexidp.io/docs/connectors/github/\n  id: github\n  name: GitHub\n
+    \ config:\n    clientID: $GITHUB_CLIENT_ID\n    clientSecret: $GITHUB_CLIENT_SECRET\n
+    \   redirectURI: <HOSTNAME>/dex/callback\n    orgs:\n    - name: <ORG_NAME>\n
+    \     teams:\n      - admin\n      - readonly\noauth2:\n  skipApprovalScreen:
+    true\n"
+kind: ConfigMap
+metadata:
+  name: {{ .Values.dexServer.configMap }}
+  labels:
+    {{- include "numaflow.labels" . | nindent 4 }}
+  namespace: {{ .Release.Namespace }}
+---
+apiVersion: v1
+data:
+  server.namespaced: {{ .Values.server.configs.namespacedScope | quote }}
+  server.managed.namespace: {{ .Values.server.configs.managedNamespace | quote }}
+  controller.disable.leader.election: {{ .Values.server.configs.leaderElection | quote }}
+  server.insecure: {{ .Values.server.configs.insecure | quote }}
+  server.port: {{ .Values.server.configs.port | quote }}
+  server.base.href: {{ .Values.server.configs.baseHref | quote }}
+  server.disable.auth: {{ .Values.server.configs.authDisable | quote }}
+  server.dex.server: {{ .Values.server.configs.dexServer | quote }}
+  server.address: {{ .Values.server.configs.address | quote }}
+kind: ConfigMap
+metadata:
+  name: numaflow-cmd-params-config
+  labels:
+    {{- include "numaflow.labels" . | nindent 4 }}
+  namespace: {{ .Release.Namespace }}
+---
+apiVersion: v1
+data:
+  rbac-conf.yaml: |
+    policy.default: role:readonly
+    # The scopes field controls which authentication scopes to examine during rbac enforcement.
+    # We can have multiple scopes, and the first scope that matches with the policy will be used.
+    # The default value is "groups", which means that the groups field of the user's token will be examined
+    # The other possible value is "email", which means that the email field of the user's token will be examined
+    # It can be provided as a comma-separated list, e.g "groups,email"
+    # policy.scopes: groups,email
+  rbac-policy.csv: |
+    # Policies go here
+    p, role:admin, *, *, *
+    p, role:readonly, *, *, GET
+    # Groups go here
+    # g, admin, role:admin
+    # g, my-github-org:my-github-team, role:readonly
+kind: ConfigMap
+metadata:
+  name: numaflow-server-rbac-config
+  labels:
+    {{- include "numaflow.labels" . | nindent 4 }}
+  namespace: {{ .Release.Namespace }}
