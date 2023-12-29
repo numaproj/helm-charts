@@ -29,6 +29,24 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+            - name: NUMAFLOW_CONTROLLER_NAMESPACED
+              valueFrom:
+                configMapKeyRef:
+                  key: namespaced
+                  name: numaflow-cmd-params-config
+                  optional: true
+            - name: NUMAFLOW_CONTROLLER_MANAGED_NAMESPACE
+              valueFrom:
+                configMapKeyRef:
+                  key: managed.namespace
+                  name: numaflow-cmd-params-config
+                  optional: true
+            - name: NUMAFLOW_LEADER_ELECTION_DISABLED
+              valueFrom:
+                configMapKeyRef:
+                  key: controller.disable.leader.election
+                  name: numaflow-cmd-params-config
+                  optional: true
           image: {{ .Values.numaflow.image.repository }}:{{ .Values.numaflow.image.tag }}
           imagePullPolicy: {{ .Values.numaflow.image.pullPolicy }}
           livenessProbe:
@@ -61,7 +79,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.dexServer.name }}
+  name: numaflow-dex-server
   labels:
     {{- include "numaflow.labels" . | nindent 4 }}
   namespace: {{ .Release.Namespace }}
@@ -88,12 +106,12 @@ spec:
               valueFrom:
                 secretKeyRef:
                   key: dex-github-client-id
-                  name: {{ .Values.dexServer.secret.name }}
+                  name: numaflow-dex-secrets
             - name: GITHUB_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
                   key: dex-github-client-secret
-                  name: {{ .Values.dexServer.secret.name }}
+                  name: numaflow-dex-secrets
           image: {{ .Values.dexServer.image.repository }}:{{ .Values.dexServer.image.tag }}
           imagePullPolicy: {{ .Values.dexServer.image.pullPolicy }}
           name: dex
@@ -108,13 +126,13 @@ spec:
             items:
               - key: config.yaml
                 path: config.yaml
-            name: {{ .Values.dexServer.configMap }}
+            name: numaflow-dex-server-config
           name: config
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.server.name }}
+  name: numaflow-server
   labels:
     {{- include "numaflow.labels" . | nindent 4 }}
   namespace: {{ .Release.Namespace }}
@@ -227,6 +245,11 @@ spec:
           volumeMounts:
             - mountPath: /opt/numaflow
               name: env-volume
+        - args:
+            - server-secrets-init
+          image: {{ .Values.numaflow.image.repository }}:{{ .Values.numaflow.image.tag }}
+          imagePullPolicy: {{ .Values.numaflow.image.pullPolicy }}
+          name: server-secrets-init
       securityContext:
         runAsNonRoot: true
         runAsUser: 9737
@@ -238,7 +261,8 @@ spec:
             name: numaflow-server-rbac-config
           name: rbac-config
 
-### numaflow server validating webhook
+### numaflow server validating webhook, deploy only when numaflow is installed in cluster scope
+{{- if eq .Values.server.configs.namespacedScope false }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -281,3 +305,4 @@ spec:
           imagePullPolicy: {{ .Values.numaflow.image.pullPolicy }}
           name: webhook
       serviceAccountName: numaflow-webhook-sa
+{{- end }}
