@@ -11,6 +11,15 @@ numaflow:
     # -- Image Pull policy of numaflow server.
     pullPolicy: Always
 
+configs:
+  # -- Whether to run the controller and the UX server in namespaced scope, defaults to false.
+  namespacedScope: false
+  # -- The namespace that the controller and the UX server watch when "namespaced" is true.
+  managedNamespace: numaflow-system
+  webhook:
+    # -- numaflow server validating webhook default to true, deploy only when namespacedScope is false
+    enabled: true
+
 server:
   # -- The number of numaflow-server replicas to run.
   replicaCount: 1
@@ -26,12 +35,6 @@ server:
       # -- The memory requests for numaflow-server.
       memory: 200Mi
   configs:
-    # -- Whether to run the controller and the UX server in namespaced scope, defaults to false.
-    namespacedScope: false
-    # -- The namespace that the controller and the UX server watch when "namespaced" is true.
-    managedNamespace: numaflow-system
-    # -- Whether to disable leader election for the controller, defaults to false
-    leaderElection: false
     # -- Whether to disable TLS for UX server.
     insecure: false
     # -- Port to listen on for UX server, defaults to 8443 or 8080 if insecure is set.
@@ -70,6 +73,9 @@ dexServer:
 controller:
   # -- The number of controller replicas to run.
   replicaCount: 1
+  configs:
+    # -- Whether to disable leader election for the controller, defaults to false
+    leaderElection: false
   resources:
     limits:
       # -- The CPU limits for controller.
@@ -81,6 +87,3 @@ controller:
       cpu: 100m
       # -- The memory requests for controller.
       memory: 200Mi
-
-
-

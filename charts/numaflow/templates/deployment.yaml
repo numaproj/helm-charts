@@ -261,8 +261,7 @@ spec:
             name: numaflow-server-rbac-config
           name: rbac-config
 
-### numaflow server validating webhook, deploy only when numaflow is installed in cluster scope
-{{- if eq .Values.server.configs.namespacedScope false }}
+{{- if and (eq .Values.configs.webhook.enabled true) (eq .Values.configs.namespacedScope false) }}
 ---
 apiVersion: apps/v1
 kind: Deployment

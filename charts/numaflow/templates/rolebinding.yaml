@@ -35,7 +35,7 @@ subjects:
     name: numaflow-server-sa
     namespace: {{ .Release.Namespace }}
 ---
-{{- if eq .Values.server.configs.namespacedScope true }}
+{{- if eq .Values.configs.namespacedScope true }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:

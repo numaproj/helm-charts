@@ -1,8 +1,8 @@
 apiVersion: v1
 data:
-  namespaced: {{ .Values.server.configs.namespacedScope | quote }}
-  managed.namespace: {{ .Values.server.configs.managedNamespace | quote }}
-  controller.disable.leader.election: {{ .Values.server.configs.leaderElection | quote }}
+  namespaced: {{ .Values.configs.namespacedScope | quote }}
+  managed.namespace: {{ .Values.configs.managedNamespace | quote }}
+  controller.disable.leader.election: {{ .Values.controller.configs.leaderElection | quote }}
   server.insecure: {{ .Values.server.configs.insecure | quote }}
   server.port: {{ .Values.server.configs.port | quote }}
   server.base.href: {{ .Values.server.configs.baseHref | quote }}
