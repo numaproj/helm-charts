@@ -6,17 +6,69 @@ metadata:
     app.kubernetes.io/component: dex-server
     app.kubernetes.io/name: numaflow-dex-server
     app.kubernetes.io/part-of: numaflow
-  name: {{ .Values.dexServer.name }}
+  name: numaflow-dex-server
   namespace: {{ .Release.Namespace }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: {{ .Values.dexServer.name }}
+  name: numaflow-dex-server
 subjects:
   - kind: ServiceAccount
     name: numaflow-dex-server
     namespace: {{ .Release.Namespace }}
 ---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/component: numaflow-ux
+    app.kubernetes.io/name: numaflow-ux
+    app.kubernetes.io/part-of: numaflow
+  name: numaflow-server-secrets-binding
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: numaflow-server-secrets-role
+subjects:
+  - kind: ServiceAccount
+    name: numaflow-server-sa
+    namespace: {{ .Release.Namespace }}
+---
+{{- if eq .Values.configs.namespacedScope true }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/component: controller-manager
+    app.kubernetes.io/name: numaflow-controller-manager
+    app.kubernetes.io/part-of: numaflow
+  name: numaflow-role-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: numaflow-role
+subjects:
+  - kind: ServiceAccount
+    name: numaflow-sa
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/component: numaflow-ux
+    app.kubernetes.io/name: numaflow-ux
+    app.kubernetes.io/part-of: numaflow
+  name: numaflow-server-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: numaflow-server-role
+subjects:
+  - kind: ServiceAccount
+    name: numaflow-server-sa
+---
+{{- else}}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -52,7 +104,6 @@ subjects:
   - kind: ServiceAccount
     name: numaflow-server-sa
     namespace: {{ .Release.Namespace }}
-
 ### ClusterRoleBinding for validating webhook
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -73,3 +124,4 @@ subjects:
     name: numaflow-webhook-sa
     namespace: {{ .Release.Namespace }}
 ---
+{{- end}}
