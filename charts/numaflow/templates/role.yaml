@@ -6,7 +6,7 @@ metadata:
     app.kubernetes.io/component: dex-server
     app.kubernetes.io/name: numaflow-dex-server
     app.kubernetes.io/part-of: numaflow
-  name: {{ .Values.dexServer.name }}
+  name: numaflow-dex-server
   namespace: {{ .Release.Namespace }}
 rules:
   - apiGroups:
@@ -18,6 +18,195 @@ rules:
       - get
       - list
       - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    app.kubernetes.io/component: numaflow-ux
+    app.kubernetes.io/name: numaflow-ux
+    app.kubernetes.io/part-of: numaflow
+  name: numaflow-server-secrets-role
+  namespace: {{ .Release.Namespace }}
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - get
+      - list
+      - watch
+      - update
+---
+{{- if eq .Values.configs.namespacedScope true }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    app.kubernetes.io/component: controller-manager
+    app.kubernetes.io/name: numaflow-controller-manager
+    app.kubernetes.io/part-of: numaflow
+  name: numaflow-role
+rules:
+  - apiGroups:
+      - numaflow.numaproj.io
+    resources:
+      - interstepbufferservices
+      - interstepbufferservices/finalizers
+      - interstepbufferservices/status
+      - pipelines
+      - pipelines/finalizers
+      - pipelines/status
+      - vertices
+      - vertices/finalizers
+      - vertices/status
+      - vertices/scale
+    verbs:
+      - create
+      - delete
+      - deletecollection
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - coordination.k8s.io
+    resources:
+      - leases
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
+      - patch
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - pods/exec
+      - configmaps
+      - services
+      - persistentvolumeclaims
+    verbs:
+      - create
+      - get
+      - list
+      - watch
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - create
+      - get
+      - list
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+      - statefulsets
+    verbs:
+      - create
+      - get
+      - list
+      - watch
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - batch
+    resources:
+      - jobs
+    verbs:
+      - create
+      - get
+      - list
+      - watch
+      - update
+      - patch
+      - delete
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    app.kubernetes.io/component: numaflow-ux
+    app.kubernetes.io/name: numaflow-ux
+    app.kubernetes.io/part-of: numaflow
+  name: numaflow-server-role
+rules:
+  - apiGroups:
+      - numaflow.numaproj.io
+    resources:
+      - interstepbufferservices
+      - interstepbufferservices/finalizers
+      - interstepbufferservices/status
+      - pipelines
+      - pipelines/finalizers
+      - pipelines/status
+      - vertices
+      - vertices/finalizers
+      - vertices/status
+      - vertices/scale
+    verbs:
+      - create
+      - delete
+      - deletecollection
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - events
+      - pods
+      - pods/log
+      - pods/exec
+      - configmaps
+      - services
+      - persistentvolumeclaims
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+      - statefulsets
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - metrics.k8s.io
+    resources:
+      - pods
+    verbs:
+      - get
+      - list
+      - watch
+---
+{{- else }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -219,7 +408,7 @@ metadata:
     app.kubernetes.io/component: ux-server
     app.kubernetes.io/name: numaflow-server
     app.kubernetes.io/part-of: numaflow
-  name: {{ .Values.server.name }}-role
+  name: numaflow-server-role
 rules:
   - apiGroups:
       - numaflow.numaproj.io
@@ -342,3 +531,5 @@ rules:
     verbs:
       - get
       - list
+---
+{{- end }}
