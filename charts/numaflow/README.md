@@ -73,7 +73,7 @@ numaflow-server-c58445b7b-lxjw4        1/1     Running   0          75s
 numaflow-webhook-74477447cc-b255v      1/1     Running   0          75s
 ```
 
-### Run simple pipeline
+### Run a simple pipeline
 
 Follow the steps [here](https://numaflow.numaproj.io/quick-start/#creating-a-simple-pipeline)
 
