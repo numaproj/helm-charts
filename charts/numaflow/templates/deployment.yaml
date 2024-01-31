@@ -250,6 +250,11 @@ spec:
           image: {{ .Values.numaflow.image.repository }}:{{ .Values.numaflow.image.tag }}
           imagePullPolicy: {{ .Values.numaflow.image.pullPolicy }}
           name: server-secrets-init
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
       securityContext:
         runAsNonRoot: true
         runAsUser: 9737
