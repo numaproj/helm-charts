@@ -7,7 +7,7 @@ numaflow:
     # -- Image of numaflow server.
     repository: quay.io/numaproj/numaflow
     # -- Tag of numaflow server.
-    tag: v1.1.1
+    tag: v1.2.1
     # -- Image Pull policy of numaflow server.
     pullPolicy: Always
 
@@ -41,12 +41,17 @@ server:
     port: 8443
     # -- Base href for Numaflow UX server, defaults to '/'.
     baseHref: /
-    # -- Whether to disable authentication and authorization for the UX server, defaults to false.
-    authDisable: false
+    # -- Whether to enable read only view for the UX server, defaults to false.
+    readOnly: "false"
+    # -- Whether to disable authentication and authorization for the UX server, defaults to true.
+    authDisable: "true"
     # -- The address of the Dex server for authentication.
     dexServer: http://numaflow-dex-server:5556/dex
     # -- The external address of the Numaflow server. This is needed when using Dex for authentication.
     address: https://localhost:8443
+    # -- The list of allowed origins for CORS on Numaflow server, separated by a comma, defaults to ''. For example: server.cors.allowed.origins: "http://localhost:3000,http://localhost:3001"
+    cors:
+      allowedOrigin: ""
   service:
     # -- The type of service for the numaflow server.
     type: ClusterIP
@@ -75,7 +80,12 @@ controller:
   replicaCount: 1
   configs:
     # -- Whether to disable leader election for the controller, defaults to false
-    leaderElection: false
+    leaderElection:
+      disabled: false
+      leaseDuration: 15s
+      renewDuration: 10s
+      renewPeriod: 2s
+
   resources:
     limits:
       # -- The CPU limits for controller.
