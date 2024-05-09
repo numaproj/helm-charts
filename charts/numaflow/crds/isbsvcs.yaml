@@ -3,6 +3,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.8.0
+  creationTimestamp: null
   name: interstepbufferservices.numaflow.numaproj.io
 spec:
   group: numaflow.numaproj.io
@@ -165,6 +166,16 @@ spec:
                                               type: string
                                             type: object
                                         type: object
+                                      matchLabelKeys:
+                                        items:
+                                          type: string
+                                        type: array
+                                        x-kubernetes-list-type: atomic
+                                      mismatchLabelKeys:
+                                        items:
+                                          type: string
+                                        type: array
+                                        x-kubernetes-list-type: atomic
                                       namespaceSelector:
                                         properties:
                                           matchExpressions:
@@ -231,6 +242,16 @@ spec:
                                           type: string
                                         type: object
                                     type: object
+                                  matchLabelKeys:
+                                    items:
+                                      type: string
+                                    type: array
+                                    x-kubernetes-list-type: atomic
+                                  mismatchLabelKeys:
+                                    items:
+                                      type: string
+                                    type: array
+                                    x-kubernetes-list-type: atomic
                                   namespaceSelector:
                                     properties:
                                       matchExpressions:
@@ -295,6 +316,16 @@ spec:
                                               type: string
                                             type: object
                                         type: object
+                                      matchLabelKeys:
+                                        items:
+                                          type: string
+                                        type: array
+                                        x-kubernetes-list-type: atomic
+                                      mismatchLabelKeys:
+                                        items:
+                                          type: string
+                                        type: array
+                                        x-kubernetes-list-type: atomic
                                       namespaceSelector:
                                         properties:
                                           matchExpressions:
@@ -361,6 +392,16 @@ spec:
                                           type: string
                                         type: object
                                     type: object
+                                  matchLabelKeys:
+                                    items:
+                                      type: string
+                                    type: array
+                                    x-kubernetes-list-type: atomic
+                                  mismatchLabelKeys:
+                                    items:
+                                      type: string
+                                    type: array
+                                    x-kubernetes-list-type: atomic
                                   namespaceSelector:
                                     properties:
                                       matchExpressions:
@@ -1257,6 +1298,16 @@ spec:
                                                   type: string
                                                 type: object
                                             type: object
+                                          matchLabelKeys:
+                                            items:
+                                              type: string
+                                            type: array
+                                            x-kubernetes-list-type: atomic
+                                          mismatchLabelKeys:
+                                            items:
+                                              type: string
+                                            type: array
+                                            x-kubernetes-list-type: atomic
                                           namespaceSelector:
                                             properties:
                                               matchExpressions:
@@ -1323,6 +1374,16 @@ spec:
                                               type: string
                                             type: object
                                         type: object
+                                      matchLabelKeys:
+                                        items:
+                                          type: string
+                                        type: array
+                                        x-kubernetes-list-type: atomic
+                                      mismatchLabelKeys:
+                                        items:
+                                          type: string
+                                        type: array
+                                        x-kubernetes-list-type: atomic
                                       namespaceSelector:
                                         properties:
                                           matchExpressions:
@@ -1387,6 +1448,16 @@ spec:
                                                   type: string
                                                 type: object
                                             type: object
+                                          matchLabelKeys:
+                                            items:
+                                              type: string
+                                            type: array
+                                            x-kubernetes-list-type: atomic
+                                          mismatchLabelKeys:
+                                            items:
+                                              type: string
+                                            type: array
+                                            x-kubernetes-list-type: atomic
                                           namespaceSelector:
                                             properties:
                                               matchExpressions:
@@ -1453,6 +1524,16 @@ spec:
                                               type: string
                                             type: object
                                         type: object
+                                      matchLabelKeys:
+                                        items:
+                                          type: string
+                                        type: array
+                                        x-kubernetes-list-type: atomic
+                                      mismatchLabelKeys:
+                                        items:
+                                          type: string
+                                        type: array
+                                        x-kubernetes-list-type: atomic
                                       namespaceSelector:
                                         properties:
                                           matchExpressions:
