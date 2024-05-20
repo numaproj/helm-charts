@@ -37,7 +37,9 @@ server:
   configs:
     # -- Whether to disable TLS for UX server.
     insecure: false
-    # -- Port to listen on for UX server, defaults to 8443 or 8080 if insecure is set.
+    # -- insecurePort to listen for UX server if insecure is set true, default to 8080.
+    insecurePort: 8080
+    # -- Port to listen on for UX server, defaults to 8443.
     port: 8443
     # -- Base href for Numaflow UX server, defaults to '/'.
     baseHref: /
@@ -48,15 +50,13 @@ server:
     # -- The address of the Dex server for authentication.
     dexServer: http://numaflow-dex-server:5556/dex
     # -- The external address of the Numaflow server. This is needed when using Dex for authentication.
-    address: https://localhost:8443
+    host: localhost
     # -- The list of allowed origins for CORS on Numaflow server, separated by a comma, defaults to ''. For example: server.cors.allowed.origins: "http://localhost:3000,http://localhost:3001"
     cors:
       allowedOrigin: ""
   service:
     # -- The type of service for the numaflow server.
     type: ClusterIP
-    # -- The port of the numaflow server.
-    port: 8443
 
 dexServer:
   image:

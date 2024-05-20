@@ -272,12 +272,16 @@ spec:
           image: {{ .Values.numaflow.image.repository }}:{{ .Values.numaflow.image.tag }}
           imagePullPolicy: {{ .Values.numaflow.image.pullPolicy }}
           ports:
-            - containerPort: {{ .Values.server.service.port }}
+            - containerPort: {{ include "server.configs.port" . }}
           livenessProbe:
             httpGet:
               path: /livez
-              port: 8443
+              port: {{ include "server.configs.port" . }}
+              {{- if .Values.server.configs.insecure }}
+              scheme: HTTP
+              {{- else }}
               scheme: HTTPS
+              {{- end }}
             initialDelaySeconds: 3
             periodSeconds: 3
           name: main

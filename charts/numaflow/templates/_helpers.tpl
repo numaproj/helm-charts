@@ -13,3 +13,10 @@ helm.sh/chart: {{ include "numaflow.chart" . }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
+{{- define "server.configs.port" -}}
+{{- if .Values.server.configs.insecure -}}
+{{- .Values.server.configs.insecurePort}}
+{{- else -}}
+{{- .Values.server.configs.port }}
+{{- end -}}
+{{- end -}}
