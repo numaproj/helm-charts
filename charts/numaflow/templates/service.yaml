@@ -23,8 +23,8 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   ports:
-    - port: {{ .Values.server.service.port }}
-      targetPort: {{ .Values.server.service.port }}
+    - port: {{ include "server.configs.port" . }}
+      targetPort: {{ include "server.configs.port" . }}
   selector:
     app.kubernetes.io/component: numaflow-ux
     app.kubernetes.io/name: numaflow-ux

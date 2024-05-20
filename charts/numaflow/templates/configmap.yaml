@@ -7,12 +7,12 @@ data:
   controller.leader.election.lease.renew.deadline: {{ .Values.controller.configs.leaderElection.renewDuration | quote }}
   controller.leader.election.lease.renew.period: {{ .Values.controller.configs.leaderElection.renewPeriod | quote }}
   server.insecure: {{ .Values.server.configs.insecure | quote }}
-  server.port: {{ .Values.server.configs.port | quote }}
+  server.port: "{{ include "server.configs.port" . }}"
   server.base.href: {{ .Values.server.configs.baseHref | quote }}
   server.readonly: {{ .Values.server.configs.readOnly | quote }}
   server.disable.auth: {{ .Values.server.configs.authDisable | quote }}
   server.dex.server: {{ .Values.server.configs.dexServer | quote }}
-  server.address: {{ .Values.server.configs.address | quote }}
+  server.address: "{{ .Values.server.configs.host }}:{{ include "server.configs.port" . }}"
   server.cors.allowed.origins: {{ .Values.server.configs.cors.allowedOrigin | quote }}
 kind: ConfigMap
 metadata:
