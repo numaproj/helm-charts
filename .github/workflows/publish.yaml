@@ -1,0 +1,30 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Step 1: Checkout"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: "Step 2: Install Helm"
+        uses: azure/setup-helm@v4
+
+      - name: "Step 3: Run chart-releaser"
+        uses: helm/chart-releaser-action@v1.6.0
+        with:
+          charts_dir: charts/numaflow
+          skip_existing: true
+          pages_branch: gh-pages
+          config: config.yaml
+        env:
+          CR_TOKEN: "${{ secrets.ACCESS_TOKEN }}"
