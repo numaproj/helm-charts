@@ -1,6 +1,10 @@
-name: verify
+name: CI
 
-on: pull_request
+on:
+  pull_request:
+  push:
+#    tags:
+#      - '*'
 
 jobs:
   lint-test:
@@ -44,3 +48,29 @@ jobs:
       - name: "Step 7: Run chart install"
         if: steps.list-changed.outputs.changed == 'true'
         run: ct install --target-branch ${{ github.event.repository.default_branch }}
+
+  release:
+#    if:  ${{ startsWith(github.event.release.tag_name, '*') }}
+    needs:
+      - lint-test
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Step 1: Checkout"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: "Step 2: Install Helm"
+        uses: azure/setup-helm@v4
+
+      - name: "Step 3: Run chart-releaser"
+        uses: helm/chart-releaser-action@v1.6.0
+        with:
+          charts_dir: charts
+          skip_existing: true
+          pages_branch: gh-pages
+#          config: config.yaml
+        env:
+          CR_TOKEN: "${{ secrets.ACCESS_TOKEN }}"
