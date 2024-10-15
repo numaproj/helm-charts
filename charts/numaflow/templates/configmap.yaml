@@ -14,6 +14,7 @@ data:
   server.dex.server: {{ .Values.server.configs.dexServer | quote }}
   server.address: "{{ .Values.server.configs.host }}:{{ include "server.configs.port" . }}"
   server.cors.allowed.origins: {{ .Values.server.configs.cors.allowedOrigin | quote }}
+  server.daemon.client.protocol: {{ .Values.server.configs.daemon.client.protocol | quote }}
 kind: ConfigMap
 metadata:
   name: numaflow-cmd-params-config
@@ -22,8 +23,14 @@ metadata:
   namespace: {{ .Release.Namespace }}
 ---
 apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: numaflow-controller-config
+  labels:
+    {{- include "numaflow.labels" . | nindent 4 }}
+  namespace: {{ .Release.Namespace }}
 data:
-  controller-config.yaml: |
+  controller-config.yaml: |+
     defaults:
       containerResources: |
         requests:
@@ -111,7 +118,7 @@ data:
             replicas: 3
         versions:
           - version: latest
-            natsImage: nats:2.10.3
+            natsImage: nats:2.10.17
             metricsExporterImage: natsio/prometheus-nats-exporter:0.9.1
             configReloaderImage: natsio/nats-server-config-reloader:0.7.0
             startCommand: /nats-server
@@ -170,12 +177,11 @@ data:
             metricsExporterImage: natsio/prometheus-nats-exporter:0.9.1
             configReloaderImage: natsio/nats-server-config-reloader:0.7.0
             startCommand: /nats-server
-kind: ConfigMap
-metadata:
-  name: numaflow-controller-config
-  labels:
-    {{- include "numaflow.labels" . | nindent 4 }}
-  namespace: {{ .Release.Namespace }}
+          - version: 2.10.17
+            natsImage: nats:2.10.17
+            metricsExporterImage: natsio/prometheus-nats-exporter:0.9.1
+            configReloaderImage: natsio/nats-server-config-reloader:0.7.0
+            startCommand: /nats-server
 ---
 apiVersion: v1
 data:
