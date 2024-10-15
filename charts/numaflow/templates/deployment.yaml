@@ -78,6 +78,9 @@ spec:
             periodSeconds: 3
           resources:
             {{- toYaml .Values.controller.resources | nindent 12 }}
+          ports:
+            - containerPort: 9090
+              name: metrics
           volumeMounts:
             - mountPath: /etc/numaflow
               name: controller-config-volume
@@ -111,10 +114,7 @@ spec:
         app.kubernetes.io/part-of: numaflow
     spec:
       containers:
-        - command:
-            - /usr/local/bin/dex
-            - serve
-            - /etc/numaflow/dex/cfg/config.yaml
+        - command: ["/usr/local/bin/dex", "serve", "/etc/numaflow/dex/cfg/config.yaml"]
           env:
             - name: GITHUB_CLIENT_ID
               valueFrom:
@@ -268,6 +268,12 @@ spec:
                 configMapKeyRef:
                   key: server.cors.allowed.origins
                   name: numaflow-cmd-params-config
+                  optional: true
+            - name: NUMAFLOW_SERVER_DAEMON_CLIENT_PROTOCOL
+              valueFrom:
+                configMapKeyRef:
+                  name: numaflow-cmd-params-config
+                  key: server.daemon.client.protocol
                   optional: true
           image: {{ .Values.numaflow.image.repository }}:{{ .Values.numaflow.image.tag }}
           imagePullPolicy: {{ .Values.numaflow.image.pullPolicy }}

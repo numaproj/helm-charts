@@ -7,7 +7,7 @@ numaflow:
     # -- Image of numaflow server.
     repository: quay.io/numaproj/numaflow
     # -- Tag of numaflow server.
-    tag: v1.2.1
+    tag: v1.3.3
     # -- Image Pull policy of numaflow server.
     pullPolicy: Always
 
@@ -54,6 +54,10 @@ server:
     # -- The list of allowed origins for CORS on Numaflow server, separated by a comma, defaults to ''. For example: server.cors.allowed.origins: "http://localhost:3000,http://localhost:3001"
     cors:
       allowedOrigin: ""
+    daemon:
+      client:
+        # -- The protocol used by the daemon client to communicate with the daemon server, defaults to grpc.
+        protocol: grpc
   service:
     # -- The type of service for the numaflow server.
     type: ClusterIP

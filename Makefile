@@ -1,7 +1,7 @@
 SHELL:=/bin/bash
 
 # Latest version of Numaflow
-NUMAFLOW_VERSION=v1.2.1
+NUMAFLOW_VERSION=v1.3.3
 
 # Update the numaflow CRDs
 .PHONY: update-crds
