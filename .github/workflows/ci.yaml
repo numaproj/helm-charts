@@ -20,7 +20,7 @@ jobs:
         with:
           version: v3.14.4
 
-      - name: "Step 3: Setup puthon"
+      - name: "Step 3: Setup python"
         uses: actions/setup-python@v5
         with:
           python-version: '3.x'
