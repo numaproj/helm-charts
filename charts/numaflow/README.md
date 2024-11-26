@@ -47,14 +47,14 @@ Output:
 
 ```bash
 NAME: numaflow
-LAST DEPLOYED: Thu Jan 18 19:51:50 2024
+LAST DEPLOYED: Tue Nov 26 22:31:01 2024
 NAMESPACE: numaflow-system
 STATUS: deployed
 REVISION: 1
 TEST SUITE: None
 NOTES:
 1. Get the application URL by running these commands:
-  export POD_NAME=$(kubectl get pods --namespace numaflow-system -l "app.kubernetes.io/name=numaflow-server" -o jsonpath="{.items[0].metadata.name}")
+  export POD_NAME=$(kubectl get pods --namespace numaflow-system -l "app.kubernetes.io/name=numaflow-ux" -o jsonpath="{.items[0].metadata.name}")
   export CONTAINER_PORT=$(kubectl get pod --namespace numaflow-system $POD_NAME -o jsonpath="{.spec.containers[0].ports[0].containerPort}")
   kubectl --namespace numaflow-system port-forward $POD_NAME $CONTAINER_PORT
   echo "Visit http://127.0.0.1:$CONTAINER_PORT to use your application"
