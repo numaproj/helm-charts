@@ -79,8 +79,11 @@ numaflow-webhook-74477447cc-b255v      1/1     Running   0          75s
 ```
 
 ### Run a simple pipeline
-
-Follow the steps [here](https://numaflow.numaproj.io/quick-start/#creating-a-simple-pipeline)
+1. Install the [Inter-Step Buffer Service](https://numaflow.numaproj.io/core-concepts/inter-step-buffer-service/) that handles communication between vertices.
+    ```bash
+    kubectl apply -f https://raw.githubusercontent.com/numaproj/numaflow/main/examples/0-isbsvc-jetstream.yaml
+    ```
+2. Follow the steps [here](https://numaflow.numaproj.io/quick-start/#creating-a-simple-pipeline) for running pipeline.
 
 ### Uninstalling the Numaflow
 
