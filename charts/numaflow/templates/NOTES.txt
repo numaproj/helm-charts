@@ -9,8 +9,6 @@
   export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} numaflow-server --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
   echo http://$SERVICE_IP:{{ include "server.configs.port" . }}
 {{- else if contains "ClusterIP" .Values.server.service.type }}
-  export POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name=numaflow-ux" -o jsonpath="{.items[0].metadata.name}")
-  export CONTAINER_PORT=$(kubectl get pod --namespace {{ .Release.Namespace }} $POD_NAME -o jsonpath="{.spec.containers[0].ports[0].containerPort}")
-  kubectl --namespace {{ .Release.Namespace }} port-forward $POD_NAME $CONTAINER_PORT
-  echo "Visit http://127.0.0.1:$CONTAINER_PORT to use your application"
+  kubectl --namespace {{ .Release.Namespace }} port-forward svc/numaflow-server 8443
+  echo "Visit https://127.0.0.1:8443 to use your application"
 {{- end }}
