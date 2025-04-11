@@ -108,7 +108,11 @@ spec:
                 properties:
                   deleteGracePeriodSeconds:
                     default: 30
-                    format: int32
+                    format: int64
+                    type: integer
+                  deletionGracePeriodSeconds:
+                    default: 30
+                    format: int64
                     type: integer
                   desiredPhase:
                     default: Running
@@ -122,7 +126,7 @@ spec:
                     type: string
                   pauseGracePeriodSeconds:
                     default: 30
-                    format: int32
+                    format: int64
                     type: integer
                 type: object
               limits:
@@ -8154,6 +8158,41 @@ spec:
                                       type: object
                                     mechanism:
                                       type: string
+                                    oauth:
+                                      properties:
+                                        clientID:
+                                          properties:
+                                            key:
+                                              type: string
+                                            name:
+                                              default: ""
+                                              type: string
+                                            optional:
+                                              type: boolean
+                                          required:
+                                          - key
+                                          type: object
+                                          x-kubernetes-map-type: atomic
+                                        clientSecret:
+                                          properties:
+                                            key:
+                                              type: string
+                                            name:
+                                              default: ""
+                                              type: string
+                                            optional:
+                                              type: boolean
+                                          required:
+                                          - key
+                                          type: object
+                                          x-kubernetes-map-type: atomic
+                                        tokenEndpoint:
+                                          type: string
+                                      required:
+                                      - clientID
+                                      - clientSecret
+                                      - tokenEndpoint
+                                      type: object
                                     plain:
                                       properties:
                                         handshake:
@@ -8689,6 +8728,41 @@ spec:
                                   type: object
                                 mechanism:
                                   type: string
+                                oauth:
+                                  properties:
+                                    clientID:
+                                      properties:
+                                        key:
+                                          type: string
+                                        name:
+                                          default: ""
+                                          type: string
+                                        optional:
+                                          type: boolean
+                                      required:
+                                      - key
+                                      type: object
+                                      x-kubernetes-map-type: atomic
+                                    clientSecret:
+                                      properties:
+                                        key:
+                                          type: string
+                                        name:
+                                          default: ""
+                                          type: string
+                                        optional:
+                                          type: boolean
+                                      required:
+                                      - key
+                                      type: object
+                                      x-kubernetes-map-type: atomic
+                                    tokenEndpoint:
+                                      type: string
+                                  required:
+                                  - clientID
+                                  - clientSecret
+                                  - tokenEndpoint
+                                  type: object
                                 plain:
                                   properties:
                                     handshake:
@@ -9403,6 +9477,41 @@ spec:
                                   type: object
                                 mechanism:
                                   type: string
+                                oauth:
+                                  properties:
+                                    clientID:
+                                      properties:
+                                        key:
+                                          type: string
+                                        name:
+                                          default: ""
+                                          type: string
+                                        optional:
+                                          type: boolean
+                                      required:
+                                      - key
+                                      type: object
+                                      x-kubernetes-map-type: atomic
+                                    clientSecret:
+                                      properties:
+                                        key:
+                                          type: string
+                                        name:
+                                          default: ""
+                                          type: string
+                                        optional:
+                                          type: boolean
+                                      required:
+                                      - key
+                                      type: object
+                                      x-kubernetes-map-type: atomic
+                                    tokenEndpoint:
+                                      type: string
+                                  required:
+                                  - clientID
+                                  - clientSecret
+                                  - tokenEndpoint
+                                  type: object
                                 plain:
                                   properties:
                                     handshake:
