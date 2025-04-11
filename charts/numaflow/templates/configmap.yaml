@@ -250,10 +250,86 @@ data:
     # example for local prometheus service
     # url: http://prometheus-operated.monitoring.svc.cluster.local:9090
     patterns:
+      - name: vertex_gauge
+        objects:
+          - vertex
+        title: Vertex Gauge Metrics
+        description: This pattern represents the gauge metrics for a vertex across different dimensions
+        expr: |
+          sum($metric_name{$filters}) by ($dimension, period)
+        params:
+          - name: start_time
+            required: false
+          - name: end_time
+            required: false
+        metrics:
+          - metric_name: vertex_pending_messages
+            display_name: Vertex Pending Messages
+            metric_description: This gauge metric keeps track of the total number of messages that are waiting to be processed over varying time frames of 1min, 5min, 15min and default period of 2min.
+            # set "Units" or unset for default behaviour
+            # unit: Units
+            required_filters:
+              - namespace
+              - pipeline
+              - vertex
+            dimensions:
+              - name: pod
+                # expr: optional expression for prometheus query
+                # overrides the default expression
+                filters:
+                  - name: pod
+                    required: false
+                  - name: period
+                    required: false
+              - name: vertex
+                # expr: optional expression for prometheus query
+                # overrides the default expression
+                filters:
+                  - name: period
+                    required: false
+
+      - name: mono_vertex_gauge
+        objects:
+          - mono-vertex
+        title: MonoVertex Gauge Metrics
+        description: This pattern represents the gauge metrics for a mono-vertex across different dimensions
+        expr: |
+          sum($metric_name{$filters}) by ($dimension, period)
+        params:
+          - name: start_time
+            required: false
+          - name: end_time
+            required: false
+        metrics:
+          - metric_name: monovtx_pending
+            display_name: MonoVertex Pending Messages
+            metric_description: This gauge metric keeps track of the total number of messages that are waiting to be processed over varying time frames of 1min, 5min, 15min and default period of 2min.
+            # set "Units" or unset for default behaviour
+            # unit: Units
+            required_filters:
+              - namespace
+              - mvtx_name
+            dimensions:
+              - name: pod
+                # expr: optional expression for prometheus query
+                # overrides the default expression
+                filters:
+                  - name: pod
+                    required: false
+                  - name: period
+                    required: false
+              - name: mono-vertex
+                # expr: optional expression for prometheus query
+                # overrides the default expression
+                filters:
+                  - name: period
+                    required: false
+
       - name: mono_vertex_histogram
-        object: mono-vertex
-        title: Processing Time Latency
-        description: This query pattern is for P99,P90 and P50 quantiles for a mono-vertex across different dimensions
+        objects:
+          - mono-vertex
+        title: MonoVertex Histogram Metrics
+        description: This pattern is for P99, P95, P90 and P50 quantiles for a mono-vertex across different dimensions
         expr: |
           histogram_quantile($quantile, sum by($dimension,le) (rate($metric_name{$filters}[$duration])))
         params:
@@ -267,32 +343,204 @@ data:
             required: false
         metrics:
           - metric_name: monovtx_processing_time_bucket
+            display_name: MonoVertex Processing Time Latency
+            metric_description: This metric represents a histogram to keep track of the total time taken to forward a chunk of messages.
+            # set "Units" or unset for default behaviour otherwise set "s" or "ms" for latency metrics
+            # Note: latency values are in μs
+            # unit: s
             required_filters:
               - namespace
               - mvtx_name
             dimensions:
+              - name: mono-vertex
               - name: pod
-                # expr: optional expression for prometheus query
-                # overrides the default expression
                 filters:
                   - name: pod
                     required: false
+          - metric_name: monovtx_sink_time_bucket
+            display_name: MonoVertex Sink Write Time Latency
+            metric_description: This metric represents a histogram to keep track of the total time taken to write to the Sink.
+            # set "Units" or unset for default behaviour otherwise set "s" or "ms" for latency metrics
+            # Note: latency values are in μs
+            # unit: ms
+            required_filters:
+              - namespace
+              - mvtx_name
+            dimensions:
               - name: mono-vertex
-                # expr: optional expression for prometheus query
-                # overrides the default expression
-          # Add histogram metrics similar to the pattern above
-          #- metric_name: monovtx_sink_time_bucket
-          #  required_filters:
-          #    - namespace
-          #    - mvtx_name
-          #  dimensions:
-          #    - name: pod
-          #      #expr: optional
-          #      filters:
-          #        - name: pod
-          #          required: false
-          #    - name: mono-vertex
-          #      #expr: optional
+              - name: pod
+                filters:
+                  - name: pod
+                    required: false
+
+      - name: vertex_throughput
+        objects:
+          - vertex
+        title: Vertex Throughput and Message Rates
+        description: This pattern measures the throughput of a vertex in messages per second across different dimensions
+        expr: sum(rate($metric_name{$filters}[$duration])) by ($dimension)
+        params:
+          - name: duration
+            required: true
+          - name: start_time
+            required: false
+          - name: end_time
+            required: false
+        metrics:
+          - metric_name: forwarder_data_read_total
+            display_name: Vertex Read Processing Rate
+            metric_description: This metric represents the total number of data messages read per second.
+            # set "Units" or unset for default behaviour
+            # unit: Units
+            required_filters:
+              - namespace
+              - pipeline
+              - vertex
+            dimensions:
+              - name: vertex
+              - name: pod
+                filters:
+                  - name: pod
+                    required: false
+
+      - name: mono_vertex_throughput
+        objects:
+          - mono-vertex
+        title: MonoVertex Throughput and Message Rates
+        description: This pattern measures the throughput of a MonoVertex in messages per second across different dimensions.
+        expr: sum(rate($metric_name{$filters}[$duration])) by ($dimension)
+        params:
+          - name: duration
+            required: true
+          - name: start_time
+            required: false
+          - name: end_time
+            required: false
+        metrics:
+          - metric_name: monovtx_read_total
+            display_name: MonoVertex Read Processing Rate
+            metric_description: This metric represents the total number of data messages read per second.
+            # set "Units" or unset for default behaviour
+            # unit: Units
+            required_filters:
+              - namespace
+              - mvtx_name
+            dimensions:
+              - name: mono-vertex
+              - name: pod
+                filters:
+                  - name: pod
+                    required: false
+
+      - name: pod_cpu_memory_utilization
+        objects:
+          - mono-vertex
+          - vertex
+        title: CPU and Memory Utilisation by Pod
+        description: This pattern represents the CPU and Memory utilisation by pod for mono-vertex and vertex
+        expr: avg_over_time($metric_name{$filters}[$duration])
+        params:
+          - name: duration
+            required: true
+          - name: start_time
+            required: false
+          - name: end_time
+            required: false
+        metrics:
+          # set your cpu metric name here
+          - metric_name: namespace_pod_cpu_utilization
+            display_name: Pod CPU Utilization
+            metric_description: This metric represents the percentage utilization of cpu usage over cpu resource limits for a pod.
+            required_filters:
+              - namespace
+              - pod
+            dimensions:
+              - name: mono-vertex
+                filters:
+                  - name: pod
+                    # expr: optional expression for prometheus query
+                    # overrides the default expression
+                    required: false
+              - name: vertex
+                filters:
+                  - name: pod
+                    # expr: optional expression for prometheus query
+                    # overrides the default expression
+                    required: false
+          # set your memory metric name here
+          - metric_name: namespace_pod_memory_utilization
+            display_name: Pod Memory Utilization
+            metric_description: This metric represents the percentage utilization of memory usage in bytes over memory resource limits for a pod.
+            required_filters:
+              - namespace
+              - pod
+            dimensions:
+              - name: mono-vertex
+                filters:
+                  - name: pod
+                    # expr: optional expression for prometheus query
+                    # overrides the default expression
+                    required: false
+              - name: vertex
+                filters:
+                  - name: pod
+                    # expr: optional expression for prometheus query
+                    # overrides the default expression
+                    required: false
+
+      - name: container_cpu_memory_utilization
+        objects:
+          - mono-vertex
+          - vertex
+        title: CPU and Memory Utilisation by Container
+        description: This pattern represents the CPU and Memory utilisation by container for mono-vertex and vertex
+        expr: avg_over_time($metric_name{$filters}[$duration])
+        params:
+          - name: duration
+            required: true
+          - name: start_time
+            required: false
+          - name: end_time
+            required: false
+        metrics:
+          # set your cpu metric name here
+          - metric_name: namespace_app_container_cpu_utilization
+            display_name: Container CPU Utilization
+            metric_description: This metric represents the percentage utilization of cpu usage over cpu resource limits for a container.
+            required_filters:
+              - namespace
+            dimensions:
+              - name: mono-vertex
+                filters:
+                  - name: container
+                    # expr: optional expression for prometheus query
+                    # overrides the default expression
+                    required: false
+              - name: vertex
+                filters:
+                  - name: container
+                    # expr: optional expression for prometheus query
+                    # overrides the default expression
+                    required: false
+          # set your memory metric name here
+          - metric_name: namespace_app_container_memory_utilization
+            display_name: Container Memory Utilization
+            metric_description: This metric represents the percentage utilization of memory usage in bytes over memory resource limits for a container.
+            required_filters:
+              - namespace
+            dimensions:
+              - name: mono-vertex
+                filters:
+                  - name: container
+                    # expr: optional expression for prometheus query
+                    # overrides the default expression
+                    required: false
+              - name: vertex
+                filters:
+                  - name: container
+                    # expr: optional expression for prometheus query
+                    # overrides the default expression
+                    required: false
 kind: ConfigMap
 metadata:
   name: numaflow-server-metrics-proxy-config
