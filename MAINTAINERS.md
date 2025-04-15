@@ -26,6 +26,10 @@ NUMAFLOW_VERSION=v1.4.4 make update-crds
   - [service.yaml](./charts/numaflow/templates/service.yaml)
   - [serviceaccount.yaml](./charts/numaflow/templates/serviceaccount.yaml)
 
+**Example:** The transition from version `v1.4.0` to `v1.4.4` includes updates to the Configmap, which are detailed in [PR #28](https://github.com/numaproj/helm-charts/pull/28/files). This PR reflects the changes made by comparing the existing [Configmap file](./charts/numaflow/templates/configmap.yaml) for `numaflow-server-metrics-proxy-config` with the [Configmap for version v1.4.4](https://github.com/numaproj/numaflow/blob/v1.4.4/config/base/numaflow-server/numaflow-server-metrics-proxy-config.yaml).
+Similar for other files, you can compare the changes in the respective files in the `numaflow` repo.
+
+
 **Step 5:**
 - Verify the changes by running below helm command in local k8s cluster
 ```
