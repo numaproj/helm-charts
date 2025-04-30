@@ -1,0 +1,10 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+	{{- include "numaflow.labels" . | nindent 4 }}
+  namespace: {{ .Release.Namespace }}
+  name: numaflow-sa
+
+---
