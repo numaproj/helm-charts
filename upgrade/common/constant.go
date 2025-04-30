@@ -52,14 +52,18 @@ var (
 		"numaflow-server-secrets-binding.yaml": "/config/namespace-install/rbac/numaflow-server/numaflow-server-secrets-binding.yaml",
 		"numaflow-server-secrets-role.yaml":    "/config/namespace-install/rbac/numaflow-server/numaflow-server-secrets-role.yaml",
 	}
-)
 
-// ServiceAccountFiles Contains the mapping of service account files
-var (
 	ServiceAccountFiles = map[string]string{
 		"numaflow-dex-server.yaml": "/config/base/dex/numaflow-dex-server-sa.yaml",
 		"numaflow-sa.yaml":         "/config/base/controller-manager/numaflow-sa.yaml",
 		"numaflow-server-sa.yaml":  "/config/base/numaflow-server/numaflow-server-sa.yaml",
 		"numaflow-webhook-sa.yaml": "/config/extensions/webhook/numaflow-webhook-sa.yaml",
+	}
+
+	CRDFiles = map[string]string{
+		"numaflow.numaproj.io_interstepbufferservices.yaml": "/config/base/crds/full/",
+		"numaflow.numaproj.io_pipelines.yaml":               "/config/base/crds/full/",
+		"numaflow.numaproj.io_vertices.yaml":                "/config/base/crds/full/",
+		"numaflow.numaproj.io_monovertices.yaml":            "/config/base/crds/full/",
 	}
 )
