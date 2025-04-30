@@ -1,0 +1,23 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: {{ .Release.Namespace }}
+  labels:
+	{{- include "numaflow.labels" . | nindent 4 }}
+    app.kubernetes.io/name: numaflow-dex-server
+    app.kubernetes.io/part-of: numaflow
+    app.kubernetes.io/component: dex-server
+  name: numaflow-dex-server
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+      - configmaps
+    verbs:
+      - get
+      - list
+      - watch
+
+---
