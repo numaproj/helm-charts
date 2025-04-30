@@ -54,16 +54,3 @@ else
 fi
 #################### Version update end ####################
 
-#################### Updating numaflow CRDs start ####################
-echo "Updating numaflow CRDs..."
-wget -O charts/numaflow/crds/isbsvcs.yaml https://raw.githubusercontent.com/numaproj/numaflow/${NUMAFLOW_VERSION}/config/base/crds/full/numaflow.numaproj.io_interstepbufferservices.yaml
-wget -O charts/numaflow/crds/pipelines.yaml https://raw.githubusercontent.com/numaproj/numaflow/${NUMAFLOW_VERSION}/config/base/crds/full/numaflow.numaproj.io_pipelines.yaml
-wget -O charts/numaflow/crds/vertices.yaml https://raw.githubusercontent.com/numaproj/numaflow/${NUMAFLOW_VERSION}/config/base/crds/full/numaflow.numaproj.io_vertices.yaml
-wget -O charts/numaflow/crds/monovertices.yaml https://raw.githubusercontent.com/numaproj/numaflow/${NUMAFLOW_VERSION}/config/base/crds/full/numaflow.numaproj.io_monovertices.yaml
-echo "Updated numaflow CRDs in charts/numaflow/crds/ directory..."
-#################### Updating numaflow CRDs end ####################
-
-#################### Updating rbac start ####################
-echo "Updating rbac..."
-wget -O charts/numaflow/rbac/cluster-role.yaml https://raw.githubusercontent.com/numaproj/numaflow/${NUMAFLOW_VERSION}/config/base/rbac/cluster-role.yaml
-#################### Updating rbac end ####################

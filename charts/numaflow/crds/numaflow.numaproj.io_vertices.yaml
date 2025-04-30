@@ -1,4 +1,5 @@
 ---
+---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -1792,6 +1793,7 @@ spec:
                       type: string
                     type: object
                   labels:
+	{{- include "numaflow.labels" . | nindent 4 }}
                     additionalProperties:
                       type: string
                     type: object
@@ -6607,3 +6609,5 @@ spec:
         specReplicasPath: .spec.replicas
         statusReplicasPath: .status.replicas
       status: {}
+
+---
