@@ -2,10 +2,9 @@ package main
 
 import (
 	"fmt"
+	"github.com/numaproj/helm-charts/upgrade/internal"
 	"log"
 	"os"
-
-	"github.com/numaproj/helm-charts/upgrade/internal"
 )
 
 func main() {
@@ -14,7 +13,14 @@ func main() {
 		log.Fatalln("Numaflow version is required as a command line argument")
 	}
 
-	fmt.Println("################### Updating latest CRDs ###################")
+	fmt.Println("Checking version existence in Numaflow repo...")
+	if exists, err := internal.IsVersionExists(numaflowVersion); !exists && err != nil {
+		log.Fatalln("Version check failed:", err)
+	}
+
+	fmt.Println("################### Updating Chart.yaml ###################")
+	internal.UpdateChartFile(numaflowVersion)
+	fmt.Println("\n################### Updating latest CRDs ###################")
 	internal.UpdateCRDFiles(numaflowVersion)
 	fmt.Println("\n################### Updating latest data for RBAC ###################")
 	internal.UpdateRBACFiles(numaflowVersion)

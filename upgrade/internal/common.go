@@ -31,7 +31,7 @@ func updateFiles(localFilePath, url, numaflowVersion string, namespaced bool) er
 		lastLine = common.ContentSeparator
 	}
 
-	latestData, err := api.DownloadFileDataWithRetry(numaflowVersion + url)
+	latestData, err := api.DownloadFileDataWithRetry(common.GithubBaseURL + numaflowVersion + url)
 	if err != nil {
 		return fmt.Errorf("error fetching latest data for file: %s, err:%v", localFilePath, err)
 	}
@@ -85,4 +85,14 @@ func addNamespace(data []string) []string {
 	}
 
 	return data
+}
+
+func IsVersionExists(numaflowVersion string) (bool, error) {
+	url := fmt.Sprintf("https://api.github.com/repos/numaproj/numaflow/releases/tags/%s", numaflowVersion)
+	_, err := api.DownloadFileDataWithRetry(url)
+	if err != nil && strings.Contains(err.Error(), "404") {
+		return false, err
+	}
+
+	return true, nil
 }
