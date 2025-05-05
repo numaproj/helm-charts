@@ -19,13 +19,13 @@ func init() {
 		fmt.Println("Error:", err)
 		return
 	}
-	BaseDir = dir + "/charts/numaflow/templates/"
+	BaseDir = dir + "/../charts/numaflow/"
 }
 
 const (
-	RBACClusterScopedBaseDir = "rbac/cluster-scoped/"
-	RBACNamespacedBaseDir    = "rbac/namespaced/"
-	ServiceAccountBaseDir    = "serviceaccounts/"
+	RBACClusterScopedBaseDir = "templates/rbac/cluster-scoped/"
+	RBACNamespacedBaseDir    = "templates/rbac/namespaced/"
+	ServiceAccountBaseDir    = "templates/serviceaccounts/"
 )
 
 // Contains the mapping of RBAC files for cluster-scoped and namespaced resources

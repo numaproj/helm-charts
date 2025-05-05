@@ -5,8 +5,6 @@ import (
 	"io"
 	"net/http"
 	"time"
-
-	"github.com/numaproj/helm-charts/upgrade/common"
 )
 
 // Retry DownloadFileData retries the download of file data from the given URL if failed with 429 error code
@@ -33,7 +31,7 @@ func DownloadFileDataWithRetry(url string) (string, error) {
 }
 
 func DownloadFileData(url string) (string, error) {
-	resp, err := http.Get(common.GithubBaseURL + url)
+	resp, err := http.Get(url)
 	if err != nil {
 		return "", fmt.Errorf("error fetching URL: %w", err)
 	}
