@@ -2,10 +2,7 @@ module github.com/numaproj/helm-charts/upgrade
 
 go 1.24.2
 
-require (
-	gopkg.in/yaml.v2 v2.4.0
-	helm.sh/helm/v3 v3.17.3
-)
+require helm.sh/helm/v3 v3.17.3
 
 require (
 	github.com/cyphar/filepath-securejoin v0.3.6 // indirect

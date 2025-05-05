@@ -2,13 +2,16 @@ package internal
 
 import (
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"strings"
+	"time"
 
-	"github.com/numaproj/helm-charts/upgrade/api"
 	"github.com/numaproj/helm-charts/upgrade/common"
 )
 
+// UpdateChartFile updates the charts files data with the data fetched from upstream
 func updateFiles(localFilePath, url, numaflowVersion string, namespaced bool) error {
 	yamlContent, err := os.ReadFile(localFilePath)
 	if err != nil {
@@ -31,7 +34,7 @@ func updateFiles(localFilePath, url, numaflowVersion string, namespaced bool) er
 		lastLine = common.ContentSeparator
 	}
 
-	latestData, err := api.DownloadFileDataWithRetry(common.GithubBaseURL + numaflowVersion + url)
+	latestData, err := downloadFileDataWithRetry(common.GithubBaseURL + numaflowVersion + url)
 	if err != nil {
 		return fmt.Errorf("error fetching latest data for file: %s, err:%v", localFilePath, err)
 	}
@@ -55,6 +58,7 @@ func updateFiles(localFilePath, url, numaflowVersion string, namespaced bool) er
 	return nil
 }
 
+// addLabelToData adds the default label to the data
 func addLabelToData(data []string) []string {
 	for i, line := range data {
 		if strings.Contains(line, "labels:") {
@@ -74,11 +78,10 @@ func addLabelToData(data []string) []string {
 	return data
 }
 
+// addNamespace adds the namespace to the data
 func addNamespace(data []string) []string {
 	for i, line := range data {
 		if strings.Contains(line, "metadata:") {
-			// Add formatted space before the namespace
-			//line = strings.Replace(line, "metadata:", "metadata:\n  namespace:", 1)
 			line = line + "\n" + "  namespace: {{ .Release.Namespace }}"
 			data[i] = line
 		}
@@ -87,12 +90,56 @@ func addNamespace(data []string) []string {
 	return data
 }
 
+// IsVersionExists checks if the version exists in the GitHub releases
 func IsVersionExists(numaflowVersion string) (bool, error) {
 	url := fmt.Sprintf("https://api.github.com/repos/numaproj/numaflow/releases/tags/%s", numaflowVersion)
-	_, err := api.DownloadFileDataWithRetry(url)
+	_, err := downloadFileDataWithRetry(url)
 	if err != nil && strings.Contains(err.Error(), "404") {
 		return false, err
 	}
 
 	return true, nil
+}
+
+// DownloadFileData downloads the file data from the given URL
+func DownloadFileData(url string) (string, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return "", fmt.Errorf("error fetching URL: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Check if the HTTP request was successful
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("HTTP Request Failed with Status: %d %s", resp.StatusCode, resp.Status)
+	}
+
+	// Read the response body
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("error reading response data: %w", err)
+	}
+
+	return string(data), nil
+}
+
+// downloadFileDataWithRetry downloads the file data with retry logic
+func downloadFileDataWithRetry(url string) (string, error) {
+	const maxRetries = 3
+	var err error
+	var data string
+
+	for i := 0; i < maxRetries; i++ {
+		data, err = DownloadFileData(url)
+		if err == nil {
+			return data, nil
+		}
+		if err.Error() == "HTTP Request Failed with Status: 429 Too Many Requests" {
+			time.Sleep(2 << (5 * i)) // Exponential backoff
+			continue                 // Retry on 429 error
+		}
+		break // Break on other errors
+	}
+
+	return "", fmt.Errorf("failed to download file data after %d attempts: %w", maxRetries, err)
 }
