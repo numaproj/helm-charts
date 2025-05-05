@@ -2,16 +2,18 @@ package internal
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/numaproj/helm-charts/upgrade/common"
 )
 
+// UpdateRBACFiles updates the RBAC files in the local directory with the latest versions from the GitHub repository.
 func UpdateRBACFiles(numaflowVersion string) {
 	// Update RBAC files for cluster-scoped resources
 	for fileName, url := range common.RbacFilesForClusterScopedResources {
 		localFilePath := generateRBACFilePath(fileName, false)
 		if err := updateFiles(localFilePath, url, numaflowVersion, false); err != nil {
-			fmt.Printf("Error updating cluster-scoped file: %s, err: %v\n", fileName, err)
+			log.Printf("Error updating cluster-scoped file: %s, err: %v\n", fileName, err)
 			continue
 		}
 		fmt.Printf("Successfully updated cluster-scoped file: %s ...\n", fileName)
@@ -20,10 +22,10 @@ func UpdateRBACFiles(numaflowVersion string) {
 	for fileName, url := range common.RbacFilesForNamespacedResources {
 		localFilePath := generateRBACFilePath(fileName, true)
 		if err := updateFiles(localFilePath, url, numaflowVersion, true); err != nil {
-			fmt.Printf("Error updating namespaced file: %s, err: %v\n", fileName, err)
+			log.Printf("Error updating namespaced file: %s, err: %v\n", fileName, err)
 			continue
 		}
-		fmt.Printf("Successfully updated namespaced file: %s ...\n", fileName)
+		log.Printf("Successfully updated namespaced file: %s ...\n", fileName)
 	}
 }
 

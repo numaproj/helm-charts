@@ -13,6 +13,7 @@ const (
 
 var BaseDir string
 
+// init initializes the BaseDir variable with the current working directory
 func init() {
 	dir, err := os.Getwd()
 	if err != nil {
@@ -28,8 +29,8 @@ const (
 	ServiceAccountBaseDir    = "templates/serviceaccounts/"
 )
 
-// Contains the mapping of RBAC files for cluster-scoped and namespaced resources
 var (
+	// RbacFilesForClusterScopedResources contains the mapping of RBAC files for cluster-scoped resources
 	RbacFilesForClusterScopedResources = map[string]string{
 		"numaflow-aggregate-to-admin-role.yaml":      "/config/cluster-install/rbac/controller-manager/numaflow-aggregate-to-admin.yaml",
 		"numaflow-aggregate-to-edit-role.yaml":       "/config/cluster-install/rbac/controller-manager/numaflow-aggregate-to-edit.yaml",
@@ -42,6 +43,7 @@ var (
 		"numaflow-webhook-cluster-role-binding.yaml": "/config/extensions/webhook/rbac/numaflow-webhook-cluster-role-binding.yaml",
 	}
 
+	// RbacFilesForNamespacedResources contains the mapping of RBAC files for namespaced resources
 	RbacFilesForNamespacedResources = map[string]string{
 		"numaflow-dex-server-rolebinding.yaml": "/config/base/dex/numaflow-dex-server-rolebinding.yaml",
 		"numaflow-dex-server-role.yaml":        "/config/base/dex/numaflow-dex-server-role.yaml",
@@ -53,6 +55,7 @@ var (
 		"numaflow-server-secrets-role.yaml":    "/config/namespace-install/rbac/numaflow-server/numaflow-server-secrets-role.yaml",
 	}
 
+	// ServiceAccountFiles contains the mapping of service account files to their respective paths
 	ServiceAccountFiles = map[string]string{
 		"numaflow-dex-server.yaml": "/config/base/dex/numaflow-dex-server-sa.yaml",
 		"numaflow-sa.yaml":         "/config/base/controller-manager/numaflow-sa.yaml",
@@ -60,6 +63,7 @@ var (
 		"numaflow-webhook-sa.yaml": "/config/extensions/webhook/numaflow-webhook-sa.yaml",
 	}
 
+	// CRDFiles contains the mapping of CRD files to their respective paths
 	CRDFiles = map[string]string{
 		"numaflow.numaproj.io_interstepbufferservices.yaml": "/config/base/crds/full/",
 		"numaflow.numaproj.io_pipelines.yaml":               "/config/base/crds/full/",
