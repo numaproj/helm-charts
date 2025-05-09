@@ -6,9 +6,8 @@ import (
 )
 
 const (
-	GithubBaseURL    = "https://raw.githubusercontent.com/numaproj/numaflow/"
-	DefaultLabel     = "	{{- include \"numaflow.labels\" . | nindent 4 }}"
-	ContentSeparator = "---"
+	GithubBaseURL = "https://raw.githubusercontent.com/numaproj/numaflow/"
+	DefaultLabel  = "	{{- include \"numaflow.labels\" . | nindent 4 }}"
 )
 
 var BaseDir string
