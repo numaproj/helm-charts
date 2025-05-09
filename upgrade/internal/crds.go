@@ -7,7 +7,7 @@ import (
 	"github.com/numaproj/helm-charts/upgrade/common"
 )
 
-const crdsLocalPath = "crds/"
+const CRDSLocalPath = "crds/"
 
 // UpdateCRDFiles updates the CRD files in the local directory with the latest versions from the GitHub repository.
 func UpdateCRDFiles(numaflowVersion string) {
@@ -23,5 +23,5 @@ func UpdateCRDFiles(numaflowVersion string) {
 }
 
 func generateCRDsFilePath(fileName string) string {
-	return fmt.Sprintf("%s%s%s", common.BaseDir, crdsLocalPath, fileName)
+	return fmt.Sprintf("%s%s%s", common.BaseDir, CRDSLocalPath, fileName)
 }

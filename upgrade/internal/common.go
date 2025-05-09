@@ -20,18 +20,15 @@ func updateFiles(localFilePath, url, numaflowVersion string, namespaced bool) er
 
 	lines := strings.Split(string(yamlContent), "\n")
 	// remove all blank lines from the end of the file
-	// Remove blank lines from the end of the lines slice
+	// Remove blank lines from the end of the lines
 	for len(lines) > 0 && strings.TrimSpace(lines[len(lines)-1]) == "" {
 		lines = lines[:len(lines)-1]
 	}
 
 	var firstLine, lastLine string
-	if len(lines) > 0 {
+	if len(lines) > 0 && strings.Contains(lines[0], "{{") {
 		firstLine = lines[0]
 		lastLine = lines[len(lines)-1]
-	} else {
-		firstLine = common.ContentSeparator
-		lastLine = common.ContentSeparator
 	}
 
 	latestData, err := downloadFileDataWithRetry(common.GithubBaseURL + numaflowVersion + url)
@@ -39,13 +36,18 @@ func updateFiles(localFilePath, url, numaflowVersion string, namespaced bool) er
 		return fmt.Errorf("error fetching latest data for file: %s, err:%v", localFilePath, err)
 	}
 
-	// Update labels and context separator in file
+	// Update conditional statements in the file
 	updatedDataLines := strings.Split(latestData, "\n")
-	updatedDataLines = append([]string{firstLine}, updatedDataLines...)
-	updatedDataLines = append(updatedDataLines, lastLine)
-	updatedDataLines = addLabelToData(updatedDataLines)
-	if namespaced {
-		updatedDataLines = addNamespace(updatedDataLines)
+	if firstLine != "" && lastLine != "" {
+		updatedDataLines = append([]string{firstLine}, updatedDataLines...)
+		updatedDataLines = append(updatedDataLines, lastLine)
+	}
+	// Do not add labels and namespace for CRDs
+	if !strings.Contains(localFilePath, CRDSLocalPath) {
+		updatedDataLines = addLabelToData(updatedDataLines)
+		if namespaced {
+			updatedDataLines = addNamespace(updatedDataLines)
+		}
 	}
 
 	updatedContent := strings.Join(updatedDataLines, "\n")
