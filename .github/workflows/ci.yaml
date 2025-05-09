@@ -3,12 +3,14 @@ name: CI
 on:
   pull_request:
     paths-ignore:
-      - '**/README.md'
+      - '**/*.md'
+      - upgrade
   push:
     branches:
       - main
     paths-ignore:
-      - '**/README.md'
+      - '**/*.md'
+      - upgrade
 
 jobs:
   lint-test:

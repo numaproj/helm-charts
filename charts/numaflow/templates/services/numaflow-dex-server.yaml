@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: numaflow-dex-server
+  labels:
+    {{- include "numaflow.labels" . | nindent 4 }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+    - port: 5556
+      targetPort: 5556
+  selector:
+    app.kubernetes.io/component: dex-server
+    app.kubernetes.io/name: numaflow-dex-server
+    app.kubernetes.io/part-of: numaflow
