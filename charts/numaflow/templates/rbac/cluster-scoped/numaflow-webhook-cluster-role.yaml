@@ -1,0 +1,68 @@
+{{- if eq .Values.configs.namespacedScope false }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: numaflow-webhook
+  labels:
+	{{- include "numaflow.labels" . | nindent 4 }}
+    app.kubernetes.io/name: numaflow-webhook
+    app.kubernetes.io/part-of: numaflow
+    app.kubernetes.io/component: numaflow-webhook
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - get
+      - list
+      - create
+      - update
+      - delete
+      - patch
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+    verbs:
+      - get
+      - list
+  - apiGroups:
+      - admissionregistration.k8s.io
+    resources:
+      - validatingwebhookconfigurations
+    verbs:
+      - get
+      - list
+      - create
+      - update
+      - delete
+      - patch
+      - watch
+  - apiGroups:
+      - numaflow.numaproj.io
+    verbs:
+      - get
+      - list
+      - watch
+    resources:
+      - interstepbufferservices
+      - pipelines
+  - apiGroups:
+      - rbac.authorization.k8s.io
+    resources:
+      - clusterroles
+    verbs:
+      - get
+      - list
+
+{{- end }}

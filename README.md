@@ -28,4 +28,4 @@ helm search repo numaproj/numaflow --versions
 ```
 
 ## Contributing
-- Please refer to the [CONTRIBUTING](./CONTRIBUTING.md) document for guidelines on how to contribute to this repository.
+- Please refer to the [MAINTAINERS](./MAINTAINERS.md) document for guidelines on how to contribute to this repository.
