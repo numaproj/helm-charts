@@ -15,5 +15,5 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: numaflow-server-sa
-    namespace: numaflow-system
+    namespace: {{ .Release.Namespace }}
 {{- end}}

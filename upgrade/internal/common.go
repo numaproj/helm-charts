@@ -13,22 +13,21 @@ import (
 
 // UpdateChartFile updates the charts files data with the data fetched from upstream
 func updateFiles(localFilePath, url, numaflowVersion string, namespaced bool) error {
-	yamlContent, err := os.ReadFile(localFilePath)
+	originalContent, err := os.ReadFile(localFilePath)
 	if err != nil {
 		return fmt.Errorf("error reading file: %w", err)
 	}
 
-	lines := strings.Split(string(yamlContent), "\n")
+	originalLines := strings.Split(string(originalContent), "\n")
 	// remove all blank lines from the end of the file
-	// Remove blank lines from the end of the lines
-	for len(lines) > 0 && strings.TrimSpace(lines[len(lines)-1]) == "" {
-		lines = lines[:len(lines)-1]
-	}
+	originalLines = removeBlankLines(originalLines)
+
+	dynamicContent := extractDynamicContent(originalLines)
 
 	var firstLine, lastLine string
-	if len(lines) > 0 && strings.Contains(lines[0], "{{") {
-		firstLine = lines[0]
-		lastLine = lines[len(lines)-1]
+	if len(originalLines) > 0 && strings.Contains(originalLines[0], "{{") {
+		firstLine = originalLines[0]
+		lastLine = originalLines[len(originalLines)-1]
 	}
 
 	latestData, err := downloadFileDataWithRetry(common.GithubBaseURL + numaflowVersion + url)
@@ -37,20 +36,25 @@ func updateFiles(localFilePath, url, numaflowVersion string, namespaced bool) er
 	}
 
 	// Update conditional statements in the file
-	updatedDataLines := strings.Split(latestData, "\n")
+	updatedLines := strings.Split(latestData, "\n")
 	if firstLine != "" && lastLine != "" {
-		updatedDataLines = append([]string{firstLine}, updatedDataLines...)
-		updatedDataLines = append(updatedDataLines, lastLine)
+		updatedLines = append([]string{firstLine}, updatedLines...)
+		updatedLines = append(updatedLines, lastLine)
+		// remove all blank lines from the end of the file
+		updatedLines = removeBlankLines(updatedLines)
 	}
 	// Do not add labels and namespace for CRDs
 	if !strings.Contains(localFilePath, CRDSLocalPath) {
-		updatedDataLines = addLabelToData(updatedDataLines)
+		updatedLines = addLabelToData(updatedLines)
 		if namespaced {
-			updatedDataLines = addNamespace(updatedDataLines)
+			updatedLines = addNamespace(updatedLines)
 		}
 	}
 
-	updatedContent := strings.Join(updatedDataLines, "\n")
+	// Incorporate dynamic lines based on unique keys
+	updatedWithDynamicLines := integrateDynamicLines(updatedLines, dynamicContent)
+
+	updatedContent := strings.Join(updatedWithDynamicLines, "\n")
 
 	err = os.WriteFile(localFilePath, []byte(updatedContent), 0644)
 	if err != nil {
@@ -58,6 +62,42 @@ func updateFiles(localFilePath, url, numaflowVersion string, namespaced bool) er
 	}
 
 	return nil
+}
+
+func removeBlankLines(lines []string) []string {
+	for len(lines) > 0 && strings.TrimSpace(lines[len(lines)-1]) == "" {
+		lines = lines[:len(lines)-1]
+	}
+
+	return lines
+}
+
+// Extract dynamic content with unique identifiers.
+func extractDynamicContent(lines []string) map[string]string {
+	dynamicLines := make(map[string]string)
+	for _, line := range lines {
+		if !strings.Contains(line, "{{-") && strings.Contains(line, "{{") && strings.Contains(line, "}}") {
+			key := extractKey(line)
+			dynamicLines[key] = line
+		}
+	}
+	return dynamicLines
+}
+
+// Key extraction logic can be adjusted based on the syntax and unique identification used within curly braces.
+func extractKey(line string) string {
+	key := strings.Split(line, ":")[0]
+	return strings.TrimSpace(key)
+}
+
+// Iterate through updated lines, replacing or inserting dynamic content where identified.
+func integrateDynamicLines(lines []string, dynamicLines map[string]string) []string {
+	for i, line := range lines {
+		if key := extractKey(line); dynamicLines[key] != "" {
+			lines[i] = dynamicLines[key]
+		}
+	}
+	return lines
 }
 
 // addLabelToData adds the default label to the data
