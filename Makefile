@@ -9,6 +9,8 @@ $(error NUMAFLOW_VERSION is not set. Please set it to the version you want to re
 endif
 
 # Update the numaflow CRDs
-.PHONY: update-crds
-update-crds:
-	NUMAFLOW_VERSION=${NUMAFLOW_VERSION} ./scripts/numaflow-release.sh
+.PHONY: upgrade-charts
+upgrade-charts:
+	cd upgrade && mkdir -p bin && \
+	go build -o bin/upgrade main.go && \
+	NUMAFLOW_VERSION=${NUMAFLOW_VERSION} ./bin/upgrade
