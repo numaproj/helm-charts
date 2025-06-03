@@ -21,6 +21,9 @@ func main() {
 	log.Println("################### Updating Chart.yaml ###################")
 	internal.UpdateChartFile(numaflowVersion)
 
+	log.Println("################### Updating Values.yaml ###################")
+	internal.UpdateValuesFile(numaflowVersion)
+
 	log.Println("\n################### Updating latest CRDs ###################")
 	internal.UpdateCRDFiles(numaflowVersion)
 
