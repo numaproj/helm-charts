@@ -1,0 +1,43 @@
+{{- if and (eq .Values.configs.webhook.enabled true) (eq .Values.configs.namespacedScope false) }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: numaflow-webhook
+  labels:
+      {{- include "numaflow.labels" . | nindent 4 }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: numaflow-webhook
+      app.kubernetes.io/name: numaflow-webhook
+      app.kubernetes.io/part-of: numaflow
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: numaflow-webhook
+        app.kubernetes.io/name: numaflow-webhook
+        app.kubernetes.io/part-of: numaflow
+    spec:
+      containers:
+        - args:
+            - webhook-service
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: PORT
+              value: "443"
+            - name: DEPLOYMENT_NAME
+              value: numaflow-webhook
+            - name: SERVICE_NAME
+              value: numaflow-webhook
+            - name: CLUSTER_ROLE_NAME
+              value: numaflow-webhook
+          image: {{ .Values.numaflow.image.repository }}:{{ .Values.numaflow.image.tag }}
+          imagePullPolicy: {{ .Values.numaflow.image.pullPolicy }}
+          name: webhook
+      serviceAccountName: numaflow-webhook-sa
+{{- end }}

@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: numaflow-server
+  labels:
+    {{- include "numaflow.labels" . | nindent 4 }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+    - port: {{ include "server.configs.port" . }}
+      targetPort: {{ include "server.configs.port" . }}
+  selector:
+    app.kubernetes.io/component: numaflow-ux
+    app.kubernetes.io/name: numaflow-ux
+    app.kubernetes.io/part-of: numaflow
+  type: {{ .Values.server.service.type }}

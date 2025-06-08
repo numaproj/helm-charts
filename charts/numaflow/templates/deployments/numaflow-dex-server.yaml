@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: numaflow-dex-server
+  labels:
+    {{- include "numaflow.labels" . | nindent 4 }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: dex-server
+      app.kubernetes.io/name: numaflow-dex-server
+      app.kubernetes.io/part-of: numaflow
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: dex-server
+        app.kubernetes.io/name: numaflow-dex-server
+        app.kubernetes.io/part-of: numaflow
+    spec:
+      containers:
+        - command: ["/usr/local/bin/dex", "serve", "/etc/numaflow/dex/cfg/config.yaml"]
+          env:
+            - name: GITHUB_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  key: dex-github-client-id
+                  name: numaflow-dex-secrets
+            - name: GITHUB_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: dex-github-client-secret
+                  name: numaflow-dex-secrets
+          image: {{ .Values.dexServer.image.repository }}:{{ .Values.dexServer.image.tag }}
+          imagePullPolicy: {{ .Values.dexServer.image.pullPolicy }}
+          name: dex
+          ports:
+            - containerPort: 5556
+          volumeMounts:
+            - mountPath: /etc/numaflow/dex/cfg/config.yaml
+              name: generated-dex-config
+              subPath: config.yaml
+            - mountPath: /etc/numaflow/dex/tls/tls.crt
+              name: tls
+              subPath: tls.crt
+            - mountPath: /etc/numaflow/dex/tls/tls.key
+              name: tls
+              subPath: tls.key
+      initContainers:
+        - args:
+            - dex-server-init
+          env:
+            - name: NUMAFLOW_SERVER_ADDRESS
+              valueFrom:
+                configMapKeyRef:
+                  key: server.address
+                  name: numaflow-cmd-params-config
+                  optional: true
+            - name: NUMAFLOW_SERVER_BASE_HREF
+              valueFrom:
+                configMapKeyRef:
+                  key: server.base.href
+                  name: numaflow-cmd-params-config
+                  optional: true
+          image: {{ .Values.numaflow.image.repository }}:{{ .Values.numaflow.image.tag }}
+          imagePullPolicy: {{ .Values.numaflow.image.pullPolicy }}
+          name: dex-init
+          volumeMounts:
+            - mountPath: /cfg
+              name: connector-config
+            - mountPath: /tls
+              name: tls
+            - mountPath: /tmp
+              name: generated-dex-config
+      serviceAccountName: numaflow-dex-server
+      volumes:
+        - configMap:
+            items:
+              - key: config.yaml
+                path: config.yaml
+            name: numaflow-dex-server-config
+          name: connector-config
+        - emptyDir: {}
+          name: tls
+        - emptyDir: {}
+          name: generated-dex-config

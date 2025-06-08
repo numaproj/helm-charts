@@ -1,0 +1,70 @@
+{{- if eq .Values.configs.namespacedScope false }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: numaflow-server-role
+  labels:
+	{{- include "numaflow.labels" . | nindent 4 }}
+    app.kubernetes.io/name: numaflow-ux
+    app.kubernetes.io/part-of: numaflow
+    app.kubernetes.io/component: numaflow-ux
+rules:
+  - apiGroups:
+      - numaflow.numaproj.io
+    verbs:
+      - create
+      - delete
+      - deletecollection
+      - get
+      - list
+      - patch
+      - update
+      - watch
+    resources:
+      - interstepbufferservices
+      - interstepbufferservices/finalizers
+      - interstepbufferservices/status
+      - pipelines
+      - pipelines/finalizers
+      - pipelines/status
+      - vertices
+      - vertices/finalizers
+      - vertices/status
+      - vertices/scale
+      - monovertices
+      - monovertices/finalizers
+      - monovertices/status
+      - monovertices/scale
+  - apiGroups:
+      - ""
+    resources:
+      - events
+      - pods
+      - pods/log
+      - configmaps
+      - services
+      - persistentvolumeclaims
+      - namespaces
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+      - statefulsets
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - metrics.k8s.io
+    resources:
+      - pods
+    verbs:
+      - get
+      - list
+      - watch
+
+{{- end}}

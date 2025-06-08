@@ -1,0 +1,20 @@
+{{- if eq .Values.configs.namespacedScope false }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: numaflow-binding
+  labels:
+	{{- include "numaflow.labels" . | nindent 4 }}
+    app.kubernetes.io/name: numaflow-controller-manager
+    app.kubernetes.io/part-of: numaflow
+    app.kubernetes.io/component: controller-manager
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: numaflow-role
+subjects:
+  - kind: ServiceAccount
+    name: numaflow-sa
+    namespace: {{ .Release.Namespace }}
+
+{{- end}}
