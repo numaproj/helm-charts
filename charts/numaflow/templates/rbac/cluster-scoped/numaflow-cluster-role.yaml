@@ -35,6 +35,9 @@ rules:
       - monovertices/finalizers
       - monovertices/status
       - monovertices/scale
+      - servingpipelines
+      - servingpipelines/finalizers
+      - servingpipelines/status
   - apiGroups:
       - coordination.k8s.io
     resources:
@@ -106,5 +109,4 @@ rules:
       - update
       - patch
       - delete
-
 {{- end}}

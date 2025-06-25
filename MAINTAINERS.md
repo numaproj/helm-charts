@@ -15,10 +15,10 @@ NUMAFLOW_VERSION=v1.4.4 make upgrade-charts
 
 **Step 3:**
 - Update these file changes accordingly by comparing it with the current Numaflow Version.
-  - [configmap.yaml](charts/numaflow/templates/configmaps/numaflow-server-metrics-proxy-config.yaml)
-  - [deployment.yaml](charts/numaflow/templates/deployments/deployment.yaml)
-  - [secret.yaml](./charts/numaflow/templates/secret.yaml)
-  - [service.yaml](./charts/numaflow/templates/service.yaml)
+  - [configmaps](charts/numaflow/templates/configmaps)
+  - [deployments](charts/numaflow/templates/deployments)
+  - [secrets](./charts/numaflow/templates/secrets)
+  - [services](./charts/numaflow/templates/services)
 
 **Example:** The transition from version `v1.4.0` to `v1.4.4` includes updates to the Configmap, which are detailed in [PR #28](https://github.com/numaproj/helm-charts/pull/28/files). This PR reflects the changes made by comparing the existing [Configmap file](charts/numaflow/templates/configmaps/numaflow-server-metrics-proxy-config.yaml) for `numaflow-server-metrics-proxy-config` with the [Configmap for version v1.4.4](https://github.com/numaproj/numaflow/blob/v1.4.4/config/base/numaflow-server/numaflow-server-metrics-proxy-config.yaml).
 Similar for other files, you can compare the changes in the respective files in the `numaflow` repo.
