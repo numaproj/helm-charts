@@ -98,6 +98,15 @@ spec:
                   - to
                   type: object
                 type: array
+              interStepBuffer:
+                properties:
+                  compression:
+                    properties:
+                      type:
+                        default: None
+                        type: string
+                    type: object
+                type: object
               interStepBufferServiceName:
                 type: string
               lifecycle:
@@ -2260,6 +2269,8 @@ spec:
                           runAsUser:
                             format: int64
                             type: integer
+                          seLinuxChangePolicy:
+                            type: string
                           seLinuxOptions:
                             properties:
                               level:
@@ -3108,6 +3119,8 @@ spec:
                           runAsUser:
                             format: int64
                             type: integer
+                          seLinuxChangePolicy:
+                            type: string
                           seLinuxOptions:
                             properties:
                               level:
@@ -4193,6 +4206,8 @@ spec:
                           runAsUser:
                             format: int64
                             type: integer
+                          seLinuxChangePolicy:
+                            type: string
                           seLinuxOptions:
                             properties:
                               level:
@@ -5275,6 +5290,8 @@ spec:
                           runAsUser:
                             format: int64
                             type: integer
+                          seLinuxChangePolicy:
+                            type: string
                           seLinuxOptions:
                             properties:
                               level:
@@ -7096,6 +7113,8 @@ spec:
                         runAsUser:
                           format: int64
                           type: integer
+                        seLinuxChangePolicy:
+                          type: string
                         seLinuxOptions:
                           properties:
                             level:
@@ -8351,6 +8370,21 @@ spec:
                               type: object
                             log:
                               type: object
+                            serve:
+                              type: object
+                            sqs:
+                              properties:
+                                awsRegion:
+                                  type: string
+                                queueName:
+                                  type: string
+                                queueOwnerAWSAccountID:
+                                  type: string
+                              required:
+                              - awsRegion
+                              - queueName
+                              - queueOwnerAWSAccountID
+                              type: object
                             udsink:
                               properties:
                                 container:
@@ -8925,9 +8959,15 @@ spec:
                           properties:
                             backoff:
                               properties:
+                                cap:
+                                  type: string
+                                factor:
+                                  type: number
                                 interval:
                                   default: 1ms
                                   type: string
+                                jitter:
+                                  type: number
                                 steps:
                                   format: int32
                                   type: integer
@@ -8935,6 +8975,21 @@ spec:
                             onFailure:
                               default: retry
                               type: string
+                          type: object
+                        serve:
+                          type: object
+                        sqs:
+                          properties:
+                            awsRegion:
+                              type: string
+                            queueName:
+                              type: string
+                            queueOwnerAWSAccountID:
+                              type: string
+                          required:
+                          - awsRegion
+                          - queueName
+                          - queueOwnerAWSAccountID
                           type: object
                         udsink:
                           properties:
@@ -9781,7 +9836,7 @@ spec:
                           - subject
                           - url
                           type: object
-                        serving:
+                        pulsar:
                           properties:
                             auth:
                               properties:
@@ -9799,22 +9854,56 @@ spec:
                                   type: object
                                   x-kubernetes-map-type: atomic
                               type: object
-                            msgIDHeaderKey:
+                            consumerName:
                               type: string
-                            service:
-                              type: boolean
-                            store:
-                              properties:
-                                ttl:
-                                  type: string
-                                url:
-                                  type: string
-                              required:
-                              - url
-                              type: object
+                            maxUnack:
+                              format: int32
+                              type: integer
+                            serverAddr:
+                              type: string
+                            subscriptionName:
+                              type: string
+                            topic:
+                              type: string
                           required:
-                          - msgIDHeaderKey
-                          - store
+                          - consumerName
+                          - serverAddr
+                          - subscriptionName
+                          - topic
+                          type: object
+                        serving:
+                          type: object
+                        sqs:
+                          properties:
+                            attributeNames:
+                              items:
+                                type: string
+                              type: array
+                            awsRegion:
+                              type: string
+                            endpointUrl:
+                              type: string
+                            maxNumberOfMessages:
+                              format: int32
+                              type: integer
+                            messageAttributeNames:
+                              items:
+                                type: string
+                              type: array
+                            queueName:
+                              type: string
+                            queueOwnerAWSAccountID:
+                              type: string
+                            visibilityTimeout:
+                              format: int32
+                              type: integer
+                            waitTimeSeconds:
+                              format: int32
+                              type: integer
+                          required:
+                          - awsRegion
+                          - queueName
+                          - queueOwnerAWSAccountID
                           type: object
                         transformer:
                           properties:
@@ -10796,6 +10885,11 @@ spec:
                               type: object
                             window:
                               properties:
+                                accumulator:
+                                  properties:
+                                    timeout:
+                                      type: string
+                                  type: object
                                 fixed:
                                   properties:
                                     length:
