@@ -131,6 +131,234 @@ spec:
                         default: 80
                         format: int32
                         type: integer
+                      rateLimit:
+                        properties:
+                          max:
+                            format: int64
+                            type: integer
+                          min:
+                            default: 1
+                            format: int64
+                            type: integer
+                          modes:
+                            properties:
+                              goBackN:
+                                properties:
+                                  coolDownPeriod:
+                                    default: 5s
+                                    type: string
+                                  rampDownPercentage:
+                                    default: 50
+                                    format: int32
+                                    type: integer
+                                  thresholdPercentage:
+                                    default: 50
+                                    format: int32
+                                    type: integer
+                                type: object
+                              onlyIfUsed:
+                                properties:
+                                  thresholdPercentage:
+                                    default: 50
+                                    format: int32
+                                    type: integer
+                                type: object
+                              relaxed:
+                                type: object
+                              scheduled:
+                                type: object
+                            type: object
+                          rampUpDuration:
+                            default: 1s
+                            type: string
+                          resumedRampUp:
+                            default: false
+                            type: boolean
+                          store:
+                            properties:
+                              inMemoryStore:
+                                type: object
+                              redisStore:
+                                properties:
+                                  db:
+                                    default: 0
+                                    format: int32
+                                    type: integer
+                                  mode:
+                                    enum:
+                                    - single
+                                    - sentinel
+                                    type: string
+                                  sentinel:
+                                    properties:
+                                      endpoints:
+                                        items:
+                                          type: string
+                                        minItems: 1
+                                        type: array
+                                      masterName:
+                                        minLength: 1
+                                        type: string
+                                      redisAuth:
+                                        properties:
+                                          password:
+                                            properties:
+                                              key:
+                                                type: string
+                                              name:
+                                                default: ""
+                                                type: string
+                                              optional:
+                                                type: boolean
+                                            required:
+                                            - key
+                                            type: object
+                                            x-kubernetes-map-type: atomic
+                                          username:
+                                            properties:
+                                              key:
+                                                type: string
+                                              name:
+                                                default: ""
+                                                type: string
+                                              optional:
+                                                type: boolean
+                                            required:
+                                            - key
+                                            type: object
+                                            x-kubernetes-map-type: atomic
+                                        type: object
+                                      redisTLS:
+                                        properties:
+                                          caCertSecret:
+                                            properties:
+                                              key:
+                                                type: string
+                                              name:
+                                                default: ""
+                                                type: string
+                                              optional:
+                                                type: boolean
+                                            required:
+                                            - key
+                                            type: object
+                                            x-kubernetes-map-type: atomic
+                                          certSecret:
+                                            properties:
+                                              key:
+                                                type: string
+                                              name:
+                                                default: ""
+                                                type: string
+                                              optional:
+                                                type: boolean
+                                            required:
+                                            - key
+                                            type: object
+                                            x-kubernetes-map-type: atomic
+                                          insecureSkipVerify:
+                                            type: boolean
+                                          keySecret:
+                                            properties:
+                                              key:
+                                                type: string
+                                              name:
+                                                default: ""
+                                                type: string
+                                              optional:
+                                                type: boolean
+                                            required:
+                                            - key
+                                            type: object
+                                            x-kubernetes-map-type: atomic
+                                        type: object
+                                      sentinelAuth:
+                                        properties:
+                                          password:
+                                            properties:
+                                              key:
+                                                type: string
+                                              name:
+                                                default: ""
+                                                type: string
+                                              optional:
+                                                type: boolean
+                                            required:
+                                            - key
+                                            type: object
+                                            x-kubernetes-map-type: atomic
+                                          username:
+                                            properties:
+                                              key:
+                                                type: string
+                                              name:
+                                                default: ""
+                                                type: string
+                                              optional:
+                                                type: boolean
+                                            required:
+                                            - key
+                                            type: object
+                                            x-kubernetes-map-type: atomic
+                                        type: object
+                                      sentinelTLS:
+                                        properties:
+                                          caCertSecret:
+                                            properties:
+                                              key:
+                                                type: string
+                                              name:
+                                                default: ""
+                                                type: string
+                                              optional:
+                                                type: boolean
+                                            required:
+                                            - key
+                                            type: object
+                                            x-kubernetes-map-type: atomic
+                                          certSecret:
+                                            properties:
+                                              key:
+                                                type: string
+                                              name:
+                                                default: ""
+                                                type: string
+                                              optional:
+                                                type: boolean
+                                            required:
+                                            - key
+                                            type: object
+                                            x-kubernetes-map-type: atomic
+                                          insecureSkipVerify:
+                                            type: boolean
+                                          keySecret:
+                                            properties:
+                                              key:
+                                                type: string
+                                              name:
+                                                default: ""
+                                                type: string
+                                              optional:
+                                                type: boolean
+                                            required:
+                                            - key
+                                            type: object
+                                            x-kubernetes-map-type: atomic
+                                        type: object
+                                    required:
+                                    - endpoints
+                                    - masterName
+                                    type: object
+                                  url:
+                                    type: string
+                                required:
+                                - mode
+                                type: object
+                            type: object
+                          ttl:
+                            default: 180s
+                            type: string
+                        type: object
                       readBatchSize:
                         default: 500
                         format: int64
@@ -6984,6 +7212,234 @@ spec:
                             bufferUsageLimit:
                               format: int32
                               type: integer
+                            rateLimit:
+                              properties:
+                                max:
+                                  format: int64
+                                  type: integer
+                                min:
+                                  default: 1
+                                  format: int64
+                                  type: integer
+                                modes:
+                                  properties:
+                                    goBackN:
+                                      properties:
+                                        coolDownPeriod:
+                                          default: 5s
+                                          type: string
+                                        rampDownPercentage:
+                                          default: 50
+                                          format: int32
+                                          type: integer
+                                        thresholdPercentage:
+                                          default: 50
+                                          format: int32
+                                          type: integer
+                                      type: object
+                                    onlyIfUsed:
+                                      properties:
+                                        thresholdPercentage:
+                                          default: 50
+                                          format: int32
+                                          type: integer
+                                      type: object
+                                    relaxed:
+                                      type: object
+                                    scheduled:
+                                      type: object
+                                  type: object
+                                rampUpDuration:
+                                  default: 1s
+                                  type: string
+                                resumedRampUp:
+                                  default: false
+                                  type: boolean
+                                store:
+                                  properties:
+                                    inMemoryStore:
+                                      type: object
+                                    redisStore:
+                                      properties:
+                                        db:
+                                          default: 0
+                                          format: int32
+                                          type: integer
+                                        mode:
+                                          enum:
+                                          - single
+                                          - sentinel
+                                          type: string
+                                        sentinel:
+                                          properties:
+                                            endpoints:
+                                              items:
+                                                type: string
+                                              minItems: 1
+                                              type: array
+                                            masterName:
+                                              minLength: 1
+                                              type: string
+                                            redisAuth:
+                                              properties:
+                                                password:
+                                                  properties:
+                                                    key:
+                                                      type: string
+                                                    name:
+                                                      default: ""
+                                                      type: string
+                                                    optional:
+                                                      type: boolean
+                                                  required:
+                                                  - key
+                                                  type: object
+                                                  x-kubernetes-map-type: atomic
+                                                username:
+                                                  properties:
+                                                    key:
+                                                      type: string
+                                                    name:
+                                                      default: ""
+                                                      type: string
+                                                    optional:
+                                                      type: boolean
+                                                  required:
+                                                  - key
+                                                  type: object
+                                                  x-kubernetes-map-type: atomic
+                                              type: object
+                                            redisTLS:
+                                              properties:
+                                                caCertSecret:
+                                                  properties:
+                                                    key:
+                                                      type: string
+                                                    name:
+                                                      default: ""
+                                                      type: string
+                                                    optional:
+                                                      type: boolean
+                                                  required:
+                                                  - key
+                                                  type: object
+                                                  x-kubernetes-map-type: atomic
+                                                certSecret:
+                                                  properties:
+                                                    key:
+                                                      type: string
+                                                    name:
+                                                      default: ""
+                                                      type: string
+                                                    optional:
+                                                      type: boolean
+                                                  required:
+                                                  - key
+                                                  type: object
+                                                  x-kubernetes-map-type: atomic
+                                                insecureSkipVerify:
+                                                  type: boolean
+                                                keySecret:
+                                                  properties:
+                                                    key:
+                                                      type: string
+                                                    name:
+                                                      default: ""
+                                                      type: string
+                                                    optional:
+                                                      type: boolean
+                                                  required:
+                                                  - key
+                                                  type: object
+                                                  x-kubernetes-map-type: atomic
+                                              type: object
+                                            sentinelAuth:
+                                              properties:
+                                                password:
+                                                  properties:
+                                                    key:
+                                                      type: string
+                                                    name:
+                                                      default: ""
+                                                      type: string
+                                                    optional:
+                                                      type: boolean
+                                                  required:
+                                                  - key
+                                                  type: object
+                                                  x-kubernetes-map-type: atomic
+                                                username:
+                                                  properties:
+                                                    key:
+                                                      type: string
+                                                    name:
+                                                      default: ""
+                                                      type: string
+                                                    optional:
+                                                      type: boolean
+                                                  required:
+                                                  - key
+                                                  type: object
+                                                  x-kubernetes-map-type: atomic
+                                              type: object
+                                            sentinelTLS:
+                                              properties:
+                                                caCertSecret:
+                                                  properties:
+                                                    key:
+                                                      type: string
+                                                    name:
+                                                      default: ""
+                                                      type: string
+                                                    optional:
+                                                      type: boolean
+                                                  required:
+                                                  - key
+                                                  type: object
+                                                  x-kubernetes-map-type: atomic
+                                                certSecret:
+                                                  properties:
+                                                    key:
+                                                      type: string
+                                                    name:
+                                                      default: ""
+                                                      type: string
+                                                    optional:
+                                                      type: boolean
+                                                  required:
+                                                  - key
+                                                  type: object
+                                                  x-kubernetes-map-type: atomic
+                                                insecureSkipVerify:
+                                                  type: boolean
+                                                keySecret:
+                                                  properties:
+                                                    key:
+                                                      type: string
+                                                    name:
+                                                      default: ""
+                                                      type: string
+                                                    optional:
+                                                      type: boolean
+                                                  required:
+                                                  - key
+                                                  type: object
+                                                  x-kubernetes-map-type: atomic
+                                              type: object
+                                          required:
+                                          - endpoints
+                                          - masterName
+                                          type: object
+                                        url:
+                                          type: string
+                                      required:
+                                      - mode
+                                      type: object
+                                  type: object
+                                ttl:
+                                  default: 180s
+                                  type: string
+                              type: object
                             readBatchSize:
                               format: int64
                               type: integer
@@ -8411,6 +8867,26 @@ spec:
                                   type: object
                                 sqs:
                                   properties:
+                                    assumeRole:
+                                      properties:
+                                        durationSeconds:
+                                          format: int32
+                                          type: integer
+                                        externalID:
+                                          type: string
+                                        policy:
+                                          type: string
+                                        policyArns:
+                                          items:
+                                            type: string
+                                          type: array
+                                        roleArn:
+                                          type: string
+                                        sessionName:
+                                          type: string
+                                      required:
+                                      - roleArn
+                                      type: object
                                     awsRegion:
                                       type: string
                                     queueName:
@@ -9075,6 +9551,26 @@ spec:
                               type: object
                             sqs:
                               properties:
+                                assumeRole:
+                                  properties:
+                                    durationSeconds:
+                                      format: int32
+                                      type: integer
+                                    externalID:
+                                      type: string
+                                    policy:
+                                      type: string
+                                    policyArns:
+                                      items:
+                                        type: string
+                                      type: array
+                                    roleArn:
+                                      type: string
+                                    sessionName:
+                                      type: string
+                                  required:
+                                  - roleArn
+                                  type: object
                                 awsRegion:
                                   type: string
                                 queueName:
@@ -10007,6 +10503,26 @@ spec:
                               type: object
                             sqs:
                               properties:
+                                assumeRole:
+                                  properties:
+                                    durationSeconds:
+                                      format: int32
+                                      type: integer
+                                    externalID:
+                                      type: string
+                                    policy:
+                                      type: string
+                                    policyArns:
+                                      items:
+                                        type: string
+                                      type: array
+                                    roleArn:
+                                      type: string
+                                    sessionName:
+                                      type: string
+                                  required:
+                                  - roleArn
+                                  type: object
                                 attributeNames:
                                   items:
                                     type: string
@@ -11823,6 +12339,8 @@ spec:
                       idleSource:
                         properties:
                           incrementBy:
+                            type: string
+                          initSourceDelay:
                             type: string
                           stepInterval:
                             default: 0s
