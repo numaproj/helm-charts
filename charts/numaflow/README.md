@@ -81,7 +81,7 @@ numaflow-webhook-74477447cc-b255v      1/1     Running   0          75s
     ```bash
     kubectl apply -f https://raw.githubusercontent.com/numaproj/numaflow/main/examples/0-isbsvc-jetstream.yaml
     ```
-2. Follow the steps [here](https://numaflow.numaproj.io/quick-start/#creating-a-simple-pipeline) for running pipeline.
+2. Follow the steps [here](https://numaflow.numaproj.io/quick-start/#creating-a-simple-pipeline) for a running pipeline.
 
 ### Uninstalling the Numaflow
 
