@@ -77,10 +77,10 @@ jobs:
         uses: azure/setup-helm@v4
 
       - name: "Step 3: Run chart-releaser"
-        uses: helm/chart-releaser-action@v1.6.0
+        uses: helm/chart-releaser-action@v1.7.0
         with:
           charts_dir: charts
           skip_existing: true
           pages_branch: gh-pages
         env:
-          CR_TOKEN: "${{ secrets.ACCESS_TOKEN }}"
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
