@@ -10,6 +10,7 @@ The released chart versions and related Numaflow app versions are:
 
 ```text
 NAME                    CHART VERSION   APP VERSION     DESCRIPTION
+numaproj/numaflow       0.4.1           1.7.1           A Helm chart for installing Numaflow in Kubernetes
 numaproj/numaflow       0.4.0           1.7.0           A Helm chart for installing Numaflow in Kubernetes
 numaproj/numaflow       0.3.0           1.6.0           A Helm chart for installing Numaflow in Kubernetes
 numaproj/numaflow       0.2.1           1.5.1           A Helm chart for installing Numaflow in Kubernetes
