@@ -2,6 +2,18 @@ apiVersion: v1
 entries:
   numaflow:
   - apiVersion: v2
+    appVersion: 1.7.4
+    created: "2026-03-26T19:37:19.503048073Z"
+    description: A Helm chart for installing Numaflow in Kubernetes
+    digest: 115964517b62f46ac572b22a9aa78f9c5bde56d71e767520891200a921594076
+    maintainers:
+    - name: chandankumar4
+    name: numaflow
+    type: application
+    urls:
+    - https://github.com/numaproj/helm-charts/releases/download/numaflow-0.4.4/numaflow-0.4.4.tgz
+    version: 0.4.4
+  - apiVersion: v2
     appVersion: 1.7.3
     created: "2026-02-27T17:11:56.209656491Z"
     description: A Helm chart for installing Numaflow in Kubernetes
@@ -173,4 +185,4 @@ entries:
     urls:
     - https://numaproj.io/helm-charts/numaflow/numaflow-0.0.1.tgz
     version: 0.0.1
-generated: "2026-02-27T17:11:56.209763381Z"
+generated: "2026-03-26T19:37:19.503178948Z"
