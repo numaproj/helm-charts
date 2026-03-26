@@ -18,7 +18,7 @@ data:
         title: Vertex Gauge Metrics
         description: This pattern represents the gauge metrics for a vertex across different dimensions
         expr: |
-          sum($metric_name{$filters}) by ($dimension, period)
+          sum(max($metric_name{$filters}) by ($dimension,partition_name,period)) by ($dimension, period)
         params:
           - name: start_time
             required: false
