@@ -7,7 +7,7 @@ numaflow:
     # -- Image of numaflow server.
     repository: quay.io/numaproj/numaflow
     # -- Tag of numaflow server.
-    tag: v1.7.4
+    tag: v1.7.5
     # -- Image Pull policy of numaflow server.
     pullPolicy: Always
 
