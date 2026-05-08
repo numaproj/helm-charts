@@ -1,3 +1,4 @@
+{{- if .Values.dexServer.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -84,3 +85,4 @@ spec:
           name: tls
         - emptyDir: {}
           name: generated-dex-config
+{{- end }}

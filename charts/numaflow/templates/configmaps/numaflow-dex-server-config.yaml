@@ -1,3 +1,4 @@
+{{- if .Values.dexServer.enabled }}
 apiVersion: v1
 data:
   config.yaml: |-
@@ -20,3 +21,4 @@ metadata:
   labels:
     {{- include "numaflow.labels" . | nindent 4 }}
   namespace: {{ .Release.Namespace }}
+{{- end }}

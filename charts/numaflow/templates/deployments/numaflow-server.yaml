@@ -69,12 +69,14 @@ spec:
                   key: server.disable.auth
                   name: numaflow-cmd-params-config
                   optional: true
+            {{- if .Values.dexServer.enabled }}
             - name: NUMAFLOW_SERVER_DEX_SERVER_ADDR
               valueFrom:
                 configMapKeyRef:
                   key: server.dex.server
                   name: numaflow-cmd-params-config
                   optional: true
+            {{- end }}
             - name: NUMAFLOW_SERVER_ADDRESS
               valueFrom:
                 configMapKeyRef:

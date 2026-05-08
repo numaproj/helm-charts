@@ -45,7 +45,7 @@ server:
     baseHref: /
     # -- Whether to enable read only view for the UX server, defaults to false.
     readOnly: "false"
-    # -- Whether to disable authentication and authorization for the UX server, defaults to true.
+    # -- Whether to disable authentication and authorization for the UX server, defaults to true. Consider setting dexServer.enabled to false if you set this to true.
     authDisable: "true"
     # -- The address of the Dex server for authentication.
     dexServer: http://numaflow-dex-server:5556/dex
@@ -63,6 +63,8 @@ server:
     type: ClusterIP
 
 dexServer:
+  # -- Whether to enable the dex server for authentication, defaults to true.
+  enabled: true
   image:
     # -- Image of dex server for authentication.
     repository: dexidp/dex
