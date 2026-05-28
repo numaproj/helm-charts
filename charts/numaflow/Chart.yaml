@@ -1,8 +1,8 @@
 apiVersion: v2
-appVersion: 1.7.5
+appVersion: 1.8.0
 description: A Helm chart for installing Numaflow in Kubernetes
 maintainers:
 - name: chandankumar4
 name: numaflow
 type: application
-version: 0.4.6
+version: 0.5.0

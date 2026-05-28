@@ -6,4 +6,5 @@ metadata:
 	{{- include "numaflow.labels" . | nindent 4 }}
   namespace: {{ .Release.Namespace }}
   name: numaflow-dex-server
+
 {{- end }}
