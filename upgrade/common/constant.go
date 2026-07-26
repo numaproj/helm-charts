@@ -3,6 +3,7 @@ package common
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 )
 
 const (
@@ -10,16 +11,46 @@ const (
 	DefaultLabel  = "	{{- include \"numaflow.labels\" . | nindent 4 }}"
 )
 
+// BaseDir is the absolute path to charts/numaflow/, with a trailing slash so
+// callers can string-concatenate sub-paths the same way they did before.
 var BaseDir string
 
-// init initializes the BaseDir variable with the current working directory
+// init locates charts/numaflow/ by walking up from CWD. This makes the tool
+// runnable from the repo root, from upgrade/, or from any deeper directory —
+// previously it only worked when invoked from upgrade/.
 func init() {
-	dir, err := os.Getwd()
+	cwd, err := os.Getwd()
 	if err != nil {
-		fmt.Println("Error:", err)
+		fmt.Println("Error resolving working directory:", err)
 		return
 	}
-	BaseDir = dir + "/../charts/numaflow/"
+	found, ok := findChartsDir(cwd)
+	if !ok {
+		// Fall back to the legacy behaviour so existing flows keep working
+		// even if the walker doesn't find a chart dir (e.g. tooling invoked
+		// from an entirely unrelated location).
+		BaseDir = cwd + "/../charts/numaflow/"
+		return
+	}
+	BaseDir = found + string(filepath.Separator)
+}
+
+// findChartsDir walks up from start looking for `charts/numaflow/`. Returns
+// the absolute path to that directory (no trailing separator) and true on
+// success.
+func findChartsDir(start string) (string, bool) {
+	dir := start
+	for {
+		candidate := filepath.Join(dir, "charts", "numaflow")
+		if info, err := os.Stat(candidate); err == nil && info.IsDir() {
+			return candidate, true
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			return "", false
+		}
+		dir = parent
+	}
 }
 
 const (
