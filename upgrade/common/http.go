@@ -8,8 +8,6 @@ import (
 	"time"
 )
 
-const rateLimitMessage = "HTTP Request Failed with Status: 429 Too Many Requests"
-
 // Download fetches the contents of url, retrying on HTTP 429. It returns the
 // response body on success and the last error observed after all retries on
 // failure. Non-429 errors (including 404) fail fast on the first attempt.

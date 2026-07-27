@@ -30,8 +30,21 @@ Environment:
 `
 
 func main() {
-	subcommand := "upgrade-charts"
 	args := os.Args[1:]
+
+	// Handle help before subcommand dispatch so `help`, `-h`, and `--help`
+	// all work. They must be checked here because the subcommand extraction
+	// below skips anything starting with `-`, which would otherwise route the
+	// flag forms into the default `upgrade-charts` path.
+	if len(args) > 0 {
+		switch args[0] {
+		case "help", "-h", "--help":
+			fmt.Print(usage)
+			return
+		}
+	}
+
+	subcommand := "upgrade-charts"
 	if len(args) > 0 && !strings.HasPrefix(args[0], "-") {
 		subcommand = args[0]
 		args = args[1:]
@@ -42,8 +55,6 @@ func main() {
 		runUpgradeCharts()
 	case "sync":
 		runSync(args)
-	case "help", "-h", "--help":
-		fmt.Print(usage)
 	default:
 		fmt.Fprintf(os.Stderr, "unknown subcommand: %s\n\n%s", subcommand, usage)
 		os.Exit(2)
