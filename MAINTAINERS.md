@@ -31,7 +31,7 @@ NUMAFLOW_VERSION=vx.y.z make sync-mirrored-files SYNC_FLAGS=--apply
 Conflicts (`<<<<<<< / ||||||| / ======= / >>>>>>>` markers) require human resolution: open the `*.conflict` file, decide whether to keep the chart's templated value or the upstream change, copy the resolved content into the chart file, and delete the marker file.
 
 Useful flags (pass via `SYNC_FLAGS`):
-- `--from-version=vx.y.z` — override the baseline version (defaults to `Chart.yaml`'s `appVersion`). Useful when catching up several releases at once.
+- `--from-version=vx.y.z` — override the baseline version (defaults to the `appVersion` in the committed `HEAD` `Chart.yaml`, i.e. the previous release, so it is unaffected by the `upgrade-charts` bump in Step 1). Useful when catching up several releases at once.
 - `--only=file1.yaml,file2.yaml` — restrict the run to a subset of files (basenames).
 
 **Step 3: verify locally**

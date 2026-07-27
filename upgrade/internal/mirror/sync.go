@@ -1,9 +1,11 @@
 package mirror
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -15,8 +17,11 @@ import (
 // SyncOptions controls a single `sync` run.
 type SyncOptions struct {
 	// FromVersion is the previous numaflow version the chart was synced
-	// against. If empty, it defaults to the chart's Chart.yaml appVersion
-	// (prefixed with `v`).
+	// against. If empty, it defaults to the appVersion recorded in the
+	// committed (HEAD) Chart.yaml, prefixed with `v`. HEAD is used rather than
+	// the working tree because the documented release flow runs
+	// `upgrade-charts` first, which rewrites the working-tree appVersion to the
+	// new version.
 	FromVersion string
 
 	// ToVersion is the new numaflow version to sync to. Required.
@@ -53,12 +58,12 @@ type FileReport struct {
 // Report status strings (kept as plain strings so they appear cleanly in the
 // summary table without further mapping).
 const (
-	ReportStatusNoChange    = "no-change"
-	ReportStatusApplied     = "applied"
-	ReportStatusReady       = "ready (not applied)"
-	ReportStatusConflict    = "conflict"
-	ReportStatusMissing     = "upstream-missing"
-	ReportStatusError       = "error"
+	ReportStatusNoChange = "no-change"
+	ReportStatusApplied  = "applied"
+	ReportStatusReady    = "ready (not applied)"
+	ReportStatusConflict = "conflict"
+	ReportStatusMissing  = "upstream-missing"
+	ReportStatusError    = "error"
 )
 
 // Report aggregates per-file results plus counters used to decide exit code.
@@ -102,18 +107,38 @@ func Run(opts SyncOptions) (Report, error) {
 		return Report{}, err
 	}
 
-	// Resolve FromVersion default from Chart.yaml.
+	// Resolve FromVersion default from the committed (HEAD) Chart.yaml.
+	//
+	// We deliberately read HEAD rather than the working tree: the documented
+	// release flow runs `upgrade-charts` first, which rewrites the working-tree
+	// appVersion to the *new* version. Reading that back would make from==to
+	// and silently turn the whole sync into a no-op. HEAD still carries the
+	// previous release's appVersion.
 	if opts.FromVersion == "" {
-		chartFile := filepath.Join(opts.BaseDir, chartutil.ChartfileName)
-		chart, err := chartutil.LoadChartfile(chartFile)
+		appVersion, err := appVersionFromGitHEAD(opts.BaseDir)
 		if err != nil {
-			return Report{}, fmt.Errorf("read %s: %w", chartFile, err)
+			return Report{}, fmt.Errorf("resolve default --from-version from git HEAD: %w; pass --from-version explicitly", err)
 		}
-		if chart.AppVersion == "" {
-			return Report{}, fmt.Errorf("Chart.yaml has empty appVersion; pass --from-version explicitly")
+		if appVersion == "" {
+			return Report{}, fmt.Errorf("HEAD Chart.yaml has empty appVersion; pass --from-version explicitly")
 		}
-		opts.FromVersion = "v" + strings.TrimPrefix(chart.AppVersion, "v")
-		fmt.Fprintf(opts.Out, "info: --from-version not set; using Chart.yaml appVersion %s\n", opts.FromVersion)
+		opts.FromVersion = "v" + strings.TrimPrefix(appVersion, "v")
+		fmt.Fprintf(opts.Out, "info: --from-version not set; using HEAD Chart.yaml appVersion %s\n", opts.FromVersion)
+	}
+
+	// Normalise both versions to a leading `v` so the guard below and the
+	// downstream upstream URLs are consistent regardless of how the caller
+	// spelled them.
+	opts.FromVersion = "v" + strings.TrimPrefix(opts.FromVersion, "v")
+	opts.ToVersion = "v" + strings.TrimPrefix(opts.ToVersion, "v")
+
+	// Guard: from == to means there is nothing to diff. Most commonly this
+	// happens when the `upgrade-charts` bump has already been committed (so
+	// HEAD carries the new version too), or --from-version was set equal to
+	// --to-version by hand. Fail loudly rather than reporting every file as
+	// no-change.
+	if opts.FromVersion == opts.ToVersion {
+		return Report{}, fmt.Errorf("--from-version (%s) equals --to-version (%s); nothing to compare — pass an explicit --from-version for the previous release", opts.FromVersion, opts.ToVersion)
 	}
 
 	// Pre-flight: confirm the to-version tag exists upstream so we fail
@@ -251,6 +276,46 @@ func processOneFile(opts SyncOptions, m MirroredFile) FileReport {
 		fmt.Fprintf(opts.Out, "  %s: merge error — %v\n", m.LocalPath, merge.Err)
 	}
 	return rep
+}
+
+// appVersionFromGitHEAD returns the appVersion recorded in the committed
+// (HEAD) copy of charts/numaflow/Chart.yaml — i.e. the value before any
+// working-tree bump by `upgrade-charts`. baseDir is used only as the git
+// working directory; the path passed to `git show` is repo-root relative so
+// the lookup works regardless of where the binary was invoked from.
+//
+// git availability is guaranteed by EnsureToolsAvailable, which Run calls
+// before reaching here.
+func appVersionFromGitHEAD(baseDir string) (string, error) {
+	rel := "charts/numaflow/" + chartutil.ChartfileName
+	cmd := exec.Command("git", "show", "HEAD:"+rel)
+	cmd.Dir = baseDir
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	out, err := cmd.Output()
+	if err != nil {
+		return "", fmt.Errorf("git show HEAD:%s: %w (stderr: %s)", rel, err, strings.TrimSpace(stderr.String()))
+	}
+
+	// Reuse chartutil's loader (via a temp file) so parsing semantics match
+	// the working-tree path exactly.
+	tmp, err := os.CreateTemp("", "chart-head-*.yaml")
+	if err != nil {
+		return "", fmt.Errorf("create temp chart file: %w", err)
+	}
+	defer os.Remove(tmp.Name())
+	if _, err := tmp.Write(out); err != nil {
+		tmp.Close()
+		return "", fmt.Errorf("write temp chart file: %w", err)
+	}
+	if err := tmp.Close(); err != nil {
+		return "", fmt.Errorf("close temp chart file: %w", err)
+	}
+	chart, err := chartutil.LoadChartfile(tmp.Name())
+	if err != nil {
+		return "", fmt.Errorf("parse HEAD Chart.yaml: %w", err)
+	}
+	return chart.AppVersion, nil
 }
 
 // verifyVersionExists checks the GitHub releases endpoint for the given tag.

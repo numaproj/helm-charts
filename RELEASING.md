@@ -87,7 +87,7 @@ NUMAFLOW_VERSION=v1.8.0 make sync-mirrored-files
 
 What this does (per file, for all 15 mirrored files):
 
-1. Fetches the upstream blob at `v1.7.5` (chart's previous `appVersion`) **and** at `v1.8.0`.
+1. Fetches the upstream blob at `v1.7.5` (the previous `appVersion`, read from the committed `HEAD` `Chart.yaml` so Step 1's bump does not affect it) **and** at `v1.8.0`.
 2. If both upstream blobs are byte-identical → `no-change`, nothing to do.
 3. Otherwise, runs a 3-way merge:
    - **base** = upstream@v1.7.5
@@ -301,6 +301,10 @@ Install `git`, `diff`, and `patch` on the host. All three are pre-flighted by th
 ### `make upgrade-charts` fails with `Versions are identical`
 
 `Chart.yaml`'s `appVersion` already equals the value you passed in `NUMAFLOW_VERSION`. Either you're trying to re-run a release, or someone bumped `Chart.yaml` out of band. Verify with `cat charts/numaflow/Chart.yaml`.
+
+### `sync-mirrored-files` fails with `--from-version ... equals --to-version`
+
+The baseline and target versions resolved to the same value, so there is nothing to compare. The default baseline is read from the committed `HEAD` `Chart.yaml`; this usually means the `upgrade-charts` bump was already committed (so `HEAD` now carries the new version too), or you passed a `--from-version` equal to the target. Pass an explicit previous version, e.g. `SYNC_FLAGS=--from-version=v1.7.5`.
 
 ### A clean merge in `.merged` looks wrong
 
