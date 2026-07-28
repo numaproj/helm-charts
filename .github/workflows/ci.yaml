@@ -68,10 +68,19 @@ jobs:
         with:
           go-version-file: upgrade/go.mod
 
-      - name: "Step 3: Check mirrored files are in sync"
+      - name: "Step 3: Build upgrade tool"
+        run: cd upgrade && mkdir -p bin && go build -o bin/upgrade .
+
+      - name: "Step 4: Check mirrored files are in sync"
         run: |
-          VERSION=$(grep '^appVersion:' charts/numaflow/Chart.yaml | awk '{print $2}')
-          NUMAFLOW_VERSION="v${VERSION}" make sync-mirrored-files
+          BASE_VERSION=$(git show origin/${{ github.base_ref }}:charts/numaflow/Chart.yaml | grep '^appVersion:' | awk '{print $2}')
+          HEAD_VERSION=$(grep '^appVersion:' charts/numaflow/Chart.yaml | awk '{print $2}')
+          if [ "$BASE_VERSION" = "$HEAD_VERSION" ]; then
+            echo "appVersion unchanged (${HEAD_VERSION}), skipping sync check"
+            exit 0
+          fi
+          echo "appVersion bumped ${BASE_VERSION} -> ${HEAD_VERSION}, checking sync"
+          NUMAFLOW_VERSION="v${HEAD_VERSION}" ./upgrade/bin/upgrade sync --from-version="v${BASE_VERSION}"
 
   release:
     if: github.ref == 'refs/heads/main'
