@@ -2,11 +2,8 @@ package internal
 
 import (
 	"fmt"
-	"io"
-	"net/http"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/numaproj/helm-charts/upgrade/common"
 )
@@ -30,7 +27,7 @@ func updateFiles(localFilePath, url, numaflowVersion string, namespaced bool) er
 		lastLine = originalLines[len(originalLines)-1]
 	}
 
-	latestData, err := downloadFileDataWithRetry(common.GithubBaseURL + numaflowVersion + url)
+	latestData, err := common.Download(common.GithubBaseURL + numaflowVersion + url)
 	if err != nil {
 		return fmt.Errorf("error fetching latest data for file: %s, err:%v", localFilePath, err)
 	}
@@ -135,53 +132,10 @@ func addNamespace(data []string) []string {
 // IsVersionExists checks if the version exists in the GitHub releases
 func IsVersionExists(numaflowVersion string) (bool, error) {
 	url := fmt.Sprintf("https://api.github.com/repos/numaproj/numaflow/releases/tags/%s", numaflowVersion)
-	_, err := downloadFileDataWithRetry(url)
+	_, err := common.Download(url)
 	if err != nil && strings.Contains(err.Error(), "404") {
 		return false, err
 	}
 
 	return true, nil
-}
-
-// DownloadFileData downloads the file data from the given URL
-func DownloadFileData(url string) (string, error) {
-	resp, err := http.Get(url)
-	if err != nil {
-		return "", fmt.Errorf("error fetching URL: %w", err)
-	}
-	defer resp.Body.Close()
-
-	// Check if the HTTP request was successful
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("HTTP Request Failed with Status: %d %s", resp.StatusCode, resp.Status)
-	}
-
-	// Read the response body
-	data, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", fmt.Errorf("error reading response data: %w", err)
-	}
-
-	return string(data), nil
-}
-
-// downloadFileDataWithRetry downloads the file data with retry logic
-func downloadFileDataWithRetry(url string) (string, error) {
-	const maxRetries = 3
-	var err error
-	var data string
-
-	for i := 0; i < maxRetries; i++ {
-		data, err = DownloadFileData(url)
-		if err == nil {
-			return data, nil
-		}
-		if err.Error() == "HTTP Request Failed with Status: 429 Too Many Requests" {
-			time.Sleep(2 << (5 * i)) // Exponential backoff
-			continue                 // Retry on 429 error
-		}
-		break // Break on other errors
-	}
-
-	return "", fmt.Errorf("failed to download file data after %d attempts: %w", maxRetries, err)
 }
