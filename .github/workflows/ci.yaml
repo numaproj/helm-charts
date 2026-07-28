@@ -56,6 +56,7 @@ jobs:
         run: ct install --target-branch ${{ github.event.repository.default_branch }}
 
   sync-check:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: "Step 1: Checkout"
