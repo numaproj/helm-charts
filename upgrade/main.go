@@ -114,4 +114,7 @@ func runSync(args []string) {
 	if report.HasFailures() {
 		os.Exit(1)
 	}
+	if !*apply && report.Ready > 0 {
+		log.Fatalf("sync check failed: %d file(s) have pending upstream changes — re-run with --apply to sync them", report.Ready)
+	}
 }
