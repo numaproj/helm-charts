@@ -1,0 +1,25 @@
+{{- if .Values.server.podDisruptionBudget.enabled }}
+{{- if and (ne .Values.server.podDisruptionBudget.minAvailable nil) (ne .Values.server.podDisruptionBudget.maxUnavailable nil) }}
+{{- fail "server.podDisruptionBudget.minAvailable and server.podDisruptionBudget.maxUnavailable are mutually exclusive" }}
+{{- end }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: numaflow-server
+  labels:
+    {{- include "numaflow.labels" . | nindent 4 }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  {{- if ne .Values.server.podDisruptionBudget.minAvailable nil }}
+  minAvailable: {{ .Values.server.podDisruptionBudget.minAvailable }}
+  {{- else if ne .Values.server.podDisruptionBudget.maxUnavailable nil }}
+  maxUnavailable: {{ .Values.server.podDisruptionBudget.maxUnavailable }}
+  {{- else }}
+  {{- fail "server.podDisruptionBudget requires minAvailable or maxUnavailable" }}
+  {{- end }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: numaflow-ux
+      app.kubernetes.io/name: numaflow-ux
+      app.kubernetes.io/part-of: numaflow
+{{- end }}

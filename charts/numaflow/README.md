@@ -89,10 +89,27 @@ numaflow-webhook-74477447cc-b255v      1/1     Running   0          75s
 helm uninstall numaflow --namespace numaflow-system
 ```
 
+### PodDisruptionBudgets
+
+PodDisruptionBudgets are disabled by default and can be enabled independently for the server, controller, Dex server, and validating webhook. For example:
+
+```yaml
+server:
+  replicaCount: 2
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+```
+
+Set either `minAvailable` or `maxUnavailable`, but not both. To use `maxUnavailable`, set `minAvailable: null`.
+
 ### Others values can be overridden using below configuration.
 | Key                                               | Type   | Default                                 | Description                                                                                                              |
 |---------------------------------------------------|--------|-----------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
 | controller.replicaCount                           | string | `1`                                     | The number of controller replicas to run.                                                                                |
+| controller.podDisruptionBudget.enabled            | bool   | `false`                                 | Whether to create a PodDisruptionBudget for the controller.                                                              |
+| controller.podDisruptionBudget.minAvailable       | int/string | `1`                                  | Minimum number or percentage of controller pods that must remain available.                                              |
+| controller.podDisruptionBudget.maxUnavailable     | int/string | `null`                               | Maximum number or percentage of controller pods that may be unavailable.                                                 |
 | controller.resources.limits.cpu                   | string | `"500m"`                                | The CPU limits for controller.                                                                                           |
 | controller.resources.limits.memory                | string | `"1024Mi"`                              | The memory limits for controller.                                                                                        |
 | controller.resources.requests.cpu                 | string | `"100m"`                                | The CPU requests for controller.                                                                                         |
@@ -105,12 +122,18 @@ helm uninstall numaflow --namespace numaflow-system
 | dexServer.image.repository                        | string | `"dexidp/dex"`                          | Image of dex server for authentication.                                                                                  |
 | dexServer.image.tag                               | string | `"v2.37.0"`                             | Tag of dex server for authentication.                                                                                    |
 | dexServer.replicaCount                            | string | `1`                                     | The number of dex server replicas to run.                                                                                |
+| dexServer.podDisruptionBudget.enabled             | bool   | `false`                                 | Whether to create a PodDisruptionBudget for the Dex server.                                                              |
+| dexServer.podDisruptionBudget.minAvailable        | int/string | `1`                                  | Minimum number or percentage of Dex server pods that must remain available.                                              |
+| dexServer.podDisruptionBudget.maxUnavailable      | int/string | `null`                               | Maximum number or percentage of Dex server pods that may be unavailable.                                                 |
 | dexServer.secret.data.GITHUB_CLIENT_ID            | string | `""`                                    | GitHub client ID for authentication.                                                                                     |
 | dexServer.secret.data.GITHUB_CLIENT_SECRET        | string | `""`                                    | GitHub client secret for authentication.                                                                                 |
 | numaflow.image.pullPolicy                         | string | `"Always"`                              | Image Pull policy of numaflow server.                                                                                    |
 | numaflow.image.repository                         | string | `"quay.io/numaproj/numaflow"`           | Image of numaflow server.                                                                                                |
 | numaflow.image.tag                                | string | `"v1.3.3"`                              | Tag of numaflow server.                                                                                                  |
 | server.replicaCount                               | string | `1`                                     | The number of replicas of numaflow-server to run.                                                                        |
+| server.podDisruptionBudget.enabled                | bool   | `false`                                 | Whether to create a PodDisruptionBudget for the Numaflow server.                                                         |
+| server.podDisruptionBudget.minAvailable           | int/string | `1`                                  | Minimum number or percentage of server pods that must remain available.                                                  |
+| server.podDisruptionBudget.maxUnavailable         | int/string | `null`                               | Maximum number or percentage of server pods that may be unavailable.                                                     |
 | server.resources.limits.cpu                       | string | `500m`                                  | The CPU limits for numaflow-server.                                                                                      |
 | server.resources.limits.memory                    | string | `1024Mi`                                | The memory limits for numaflow-server.                                                                                   |
 | server.resources.requests.cpu                     | string | `100m`                                  | The CPU requests for numaflow-server.                                                                                    |
@@ -127,5 +150,8 @@ helm uninstall numaflow --namespace numaflow-system
 | configs.managedNamespace                          | string | `"numaflow-system"`                     | The namespace that the controller and the UX server watch when "namespaced" is true.                                     |
 | configs.namespacedScope                           | bool   | `false`                                 | Whether to run the controller and the UX server in namespaced scope, defaults to false.                                  |
 | configs.webhook.enabled                           | bool   | `true`                                  | Whether to deploy numaflow server validating webhook, default to true. Note: deploy only when namespacedScope is false.  |
+| configs.webhook.podDisruptionBudget.enabled       | bool   | `false`                                 | Whether to create a PodDisruptionBudget for the validating webhook.                                                      |
+| configs.webhook.podDisruptionBudget.minAvailable  | int/string | `1`                                  | Minimum number or percentage of webhook pods that must remain available.                                                 |
+| configs.webhook.podDisruptionBudget.maxUnavailable| int/string | `null`                               | Maximum number or percentage of webhook pods that may be unavailable.                                                    |
 
 ----------------------------------------------

@@ -19,6 +19,13 @@ configs:
   webhook:
     # -- numaflow server validating webhook default to true, deploy only when namespacedScope is false
     enabled: true
+    podDisruptionBudget:
+      # -- Whether to create a PodDisruptionBudget for the validating webhook.
+      enabled: false
+      # -- Minimum number or percentage of webhook pods that must remain available.
+      minAvailable: 1
+      # -- Maximum number or percentage of webhook pods that may be unavailable. Mutually exclusive with minAvailable.
+      maxUnavailable: null
 
 server:
   # -- The number of numaflow-server replicas to run.
@@ -61,6 +68,13 @@ server:
   service:
     # -- The type of service for the numaflow server.
     type: ClusterIP
+  podDisruptionBudget:
+    # -- Whether to create a PodDisruptionBudget for the numaflow server.
+    enabled: false
+    # -- Minimum number or percentage of server pods that must remain available.
+    minAvailable: 1
+    # -- Maximum number or percentage of server pods that may be unavailable. Mutually exclusive with minAvailable.
+    maxUnavailable: null
 
 dexServer:
   # -- Whether to enable the dex server for authentication, defaults to true.
@@ -74,6 +88,13 @@ dexServer:
     pullPolicy: Always
   # The number of dex-server replicas to run.
   replicaCount: 1
+  podDisruptionBudget:
+    # -- Whether to create a PodDisruptionBudget for the dex server.
+    enabled: false
+    # -- Minimum number or percentage of dex server pods that must remain available.
+    minAvailable: 1
+    # -- Maximum number or percentage of dex server pods that may be unavailable. Mutually exclusive with minAvailable.
+    maxUnavailable: null
   secret:
     data:
       # -- GitHub client ID for authentication.
@@ -84,6 +105,13 @@ dexServer:
 controller:
   # -- The number of controller replicas to run.
   replicaCount: 1
+  podDisruptionBudget:
+    # -- Whether to create a PodDisruptionBudget for the controller.
+    enabled: false
+    # -- Minimum number or percentage of controller pods that must remain available.
+    minAvailable: 1
+    # -- Maximum number or percentage of controller pods that may be unavailable. Mutually exclusive with minAvailable.
+    maxUnavailable: null
   configs:
     # -- Whether to disable leader election for the controller, defaults to false
     leaderElection:
