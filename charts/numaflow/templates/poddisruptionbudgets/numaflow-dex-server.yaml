@@ -1,0 +1,25 @@
+{{- if and .Values.dexServer.enabled .Values.dexServer.podDisruptionBudget.enabled }}
+{{- if and (ne .Values.dexServer.podDisruptionBudget.minAvailable nil) (ne .Values.dexServer.podDisruptionBudget.maxUnavailable nil) }}
+{{- fail "dexServer.podDisruptionBudget.minAvailable and dexServer.podDisruptionBudget.maxUnavailable are mutually exclusive" }}
+{{- end }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: numaflow-dex-server
+  labels:
+    {{- include "numaflow.labels" . | nindent 4 }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  {{- if ne .Values.dexServer.podDisruptionBudget.minAvailable nil }}
+  minAvailable: {{ .Values.dexServer.podDisruptionBudget.minAvailable }}
+  {{- else if ne .Values.dexServer.podDisruptionBudget.maxUnavailable nil }}
+  maxUnavailable: {{ .Values.dexServer.podDisruptionBudget.maxUnavailable }}
+  {{- else }}
+  {{- fail "dexServer.podDisruptionBudget requires minAvailable or maxUnavailable" }}
+  {{- end }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: dex-server
+      app.kubernetes.io/name: numaflow-dex-server
+      app.kubernetes.io/part-of: numaflow
+{{- end }}
