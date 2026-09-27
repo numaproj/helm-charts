@@ -1,7 +1,7 @@
 apiVersion: v1
 data:
   namespaced: {{ .Values.configs.namespacedScope | quote }}
-  managed.namespace: {{ .Values.configs.managedNamespace | quote }}
+  managed.namespace: {{ tpl .Values.configs.managedNamespace . | quote }}
   controller.leader.election.disabled: {{ .Values.controller.configs.leaderElection.disabled | quote }}
   controller.leader.election.lease.duration: {{ .Values.controller.configs.leaderElection.leaseDuration | quote }}
   controller.leader.election.lease.renew.deadline: {{ .Values.controller.configs.leaderElection.renewDuration | quote }}

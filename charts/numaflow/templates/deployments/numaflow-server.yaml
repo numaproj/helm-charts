@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: numaflow-server
+  name: {{ tpl .Values.server.name . }}
   labels:
     {{- include "numaflow.labels" . | nindent 4 }}
   namespace: {{ .Release.Namespace }}
@@ -113,6 +113,8 @@ spec:
           name: main
           resources:
             {{- toYaml .Values.server.resources | nindent 12 }}
+          securityContext:
+            {{- toYaml .Values.server.securityContext | nindent 12 }}
           volumeMounts:
             - mountPath: /ui/build/runtime-env.js
               name: env-volume
@@ -137,6 +139,10 @@ spec:
           image: {{ .Values.numaflow.image.repository }}:{{ .Values.numaflow.image.tag }}
           imagePullPolicy: {{ .Values.numaflow.image.pullPolicy }}
           name: server-init
+          resources:
+            {{- toYaml .Values.server.init.resources | nindent 12 }}
+          securityContext:
+            {{- toYaml .Values.server.init.securityContext | nindent 12 }}
           volumeMounts:
             - mountPath: /opt/numaflow
               name: env-volume
@@ -145,6 +151,10 @@ spec:
           image: {{ .Values.numaflow.image.repository }}:{{ .Values.numaflow.image.tag }}
           imagePullPolicy: {{ .Values.numaflow.image.pullPolicy }}
           name: server-secrets-init
+          resources:
+            {{- toYaml .Values.server.init.resources | nindent 12 }}
+          securityContext:
+            {{- toYaml .Values.server.init.securityContext | nindent 12 }}
           env:
             - name: NAMESPACE
               valueFrom:
@@ -157,8 +167,7 @@ spec:
                   name: numaflow-cmd-params-config
                   optional: true
       securityContext:
-        runAsNonRoot: true
-        runAsUser: 9737
+        {{- toYaml .Values.server.podSecurityContext | nindent 8 }}
       serviceAccountName: numaflow-server-sa
       volumes:
         - emptyDir: {}

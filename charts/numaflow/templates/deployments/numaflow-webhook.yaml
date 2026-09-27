@@ -2,7 +2,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: numaflow-webhook
+  name: {{ tpl .Values.configs.webhook.name . }}
   labels:
       {{- include "numaflow.labels" . | nindent 4 }}
   namespace: {{ .Release.Namespace }}
@@ -31,13 +31,19 @@ spec:
             - name: PORT
               value: "443"
             - name: DEPLOYMENT_NAME
-              value: numaflow-webhook
+              value: {{ tpl .Values.configs.webhook.name . }}
             - name: SERVICE_NAME
-              value: numaflow-webhook
+              value: {{ tpl .Values.configs.webhook.service.name . }}
             - name: CLUSTER_ROLE_NAME
               value: numaflow-webhook
           image: {{ .Values.numaflow.image.repository }}:{{ .Values.numaflow.image.tag }}
           imagePullPolicy: {{ .Values.numaflow.image.pullPolicy }}
           name: webhook
+          resources:
+            {{- toYaml .Values.configs.webhook.resources | nindent 12 }}
+          securityContext:
+            {{- toYaml .Values.configs.webhook.securityContext | nindent 12 }}
       serviceAccountName: numaflow-webhook-sa
+      securityContext:
+        {{- toYaml .Values.configs.webhook.podSecurityContext | nindent 8 }}
 {{- end }}

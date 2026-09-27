@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: numaflow-controller
+  name: {{ tpl .Values.controller.name . }}
   labels:
     {{- include "numaflow.labels" . | nindent 4 }}
   namespace: {{ .Release.Namespace }}
@@ -78,6 +78,8 @@ spec:
             periodSeconds: 3
           resources:
             {{- toYaml .Values.controller.resources | nindent 12 }}
+          securityContext:
+            {{- toYaml .Values.controller.securityContext | nindent 12 }}
           ports:
             - containerPort: 9090
               name: metrics
@@ -85,8 +87,7 @@ spec:
             - mountPath: /etc/numaflow
               name: controller-config-volume
       securityContext:
-        runAsNonRoot: true
-        runAsUser: 9737
+        {{- toYaml .Values.controller.podSecurityContext | nindent 10 }}        
       serviceAccountName: numaflow-sa
       volumes:
         - configMap:

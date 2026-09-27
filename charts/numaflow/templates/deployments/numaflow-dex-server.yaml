@@ -2,7 +2,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: numaflow-dex-server
+  name: {{ tpl .Values.dexServer.name . }}
   labels:
     {{- include "numaflow.labels" . | nindent 4 }}
   namespace: {{ .Release.Namespace }}
@@ -35,6 +35,10 @@ spec:
           image: {{ .Values.dexServer.image.repository }}:{{ .Values.dexServer.image.tag }}
           imagePullPolicy: {{ .Values.dexServer.image.pullPolicy }}
           name: dex
+          resources:
+            {{- toYaml .Values.dexServer.resources | nindent 12 }}
+          securityContext:
+            {{- toYaml .Values.dexServer.securityContext | nindent 12 }}
           ports:
             - containerPort: 5556
           volumeMounts:
@@ -66,6 +70,10 @@ spec:
           image: {{ .Values.numaflow.image.repository }}:{{ .Values.numaflow.image.tag }}
           imagePullPolicy: {{ .Values.numaflow.image.pullPolicy }}
           name: dex-init
+          resources:
+            {{- toYaml .Values.dexServer.init.resources | nindent 12 }}
+          securityContext:
+            {{- toYaml .Values.dexServer.init.securityContext | nindent 12 }}
           volumeMounts:
             - mountPath: /cfg
               name: connector-config
@@ -74,6 +82,9 @@ spec:
             - mountPath: /tmp
               name: generated-dex-config
       serviceAccountName: numaflow-dex-server
+      
+      securityContext:
+        {{- toYaml .Values.dexServer.podSecurityContext | nindent 8 }}
       volumes:
         - configMap:
             items:
