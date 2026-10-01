@@ -65,6 +65,9 @@ server:
       client:
         # -- The protocol used by the daemon client to communicate with the daemon server, defaults to grpc.
         protocol: grpc
+  metricsProxy:
+    # -- URL of the Prometheus-compatible service that backs the Metrics tab in the UI, for example http://prometheus-operated.monitoring.svc.cluster.local:9090. The Metrics tab is hidden when this is empty.
+    url: ""
   service:
     # -- The type of service for the numaflow server.
     type: ClusterIP
