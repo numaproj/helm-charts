@@ -168,3 +168,68 @@ Changing the URL restarts `numaflow-server`, which reads this setting only at st
 | configs.webhook.podDisruptionBudget.maxUnavailable| int/string | `null`                               | Maximum number or percentage of webhook pods that may be unavailable.                                                    |
 
 ----------------------------------------------
+
+
+### SecurityContext
+
+Each deployment can have it's own pod security context, and each container can have its own security context.
+This can allow for running numaflow in Pod Security Admission controlled environments. Example:
+
+
+```yaml
+server:
+  securityContext:
+    runAsGroup: 9737
+    runAsNonRoot: true
+    runAsUser: 9737
+    seccompProfile:
+      type: RuntimeDefault
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: ["ALL"]
+
+  podSecurityContext:
+    runAsGroup: 9737
+    runAsNonRoot: true
+    runAsUser: 9737
+    seccompProfile:
+      type: RuntimeDefault
+
+  init:
+    securityContext:
+      runAsGroup: 9737
+      runAsNonRoot: true
+      runAsUser: 9737
+      seccompProfile:
+        type: RuntimeDefault
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+```
+
+
+
+### Resources
+
+Each container can also have it's own resources to ensure compliance with cluster ResourceQuotas. Typically the default
+resources are sufficient, but ResourceQuotas can also enforce requiring requests and/or limits on init containers as well
+
+```
+server:
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1GMi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  init:  # much smaller resource size
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 10m
+        memory: 64Mi
+
+```

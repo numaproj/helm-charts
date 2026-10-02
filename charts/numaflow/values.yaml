@@ -17,6 +17,8 @@ configs:
   # -- The namespace that the controller and the UX server watch when "namespaced" is true.
   managedNamespace: numaflow-system
   webhook:
+    # -- The name of the webhook deployment, can be templatized
+    name: numaflow-webhook
     # -- numaflow server validating webhook default to true, deploy only when namespacedScope is false
     enabled: true
     podDisruptionBudget:
@@ -27,7 +29,16 @@ configs:
       # -- Maximum number or percentage of webhook pods that may be unavailable. Mutually exclusive with minAvailable.
       maxUnavailable: null
 
+    service:
+      name: "numaflow-webhook"
+
+    resources: {}
+    securityContext: {}
+    podSecurityContext: {}
+
 server:
+  # -- The name of the numaflow-server deployment, can be templatized
+  name: numaflow-server
   # -- The number of numaflow-server replicas to run.
   replicaCount: 1
   resources:
@@ -41,6 +52,10 @@ server:
       cpu: 100m
       # -- The memory requests for numaflow-server.
       memory: 200Mi
+  securityContext: {}
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 9737
   configs:
     # -- Whether to disable TLS for UX server.
     insecure: false
@@ -71,6 +86,7 @@ server:
   service:
     # -- The type of service for the numaflow server.
     type: ClusterIP
+    name: "numaflow-server"
   podDisruptionBudget:
     # -- Whether to create a PodDisruptionBudget for the numaflow server.
     enabled: false
@@ -78,8 +94,13 @@ server:
     minAvailable: 1
     # -- Maximum number or percentage of server pods that may be unavailable. Mutually exclusive with minAvailable.
     maxUnavailable: null
+  init:
+    resources: {}
+    securityContext: {}
 
 dexServer:
+  # -- The name of the dex server deployment, can be templatized
+  name: numaflow-dex-server
   # -- Whether to enable the dex server for authentication, defaults to true.
   enabled: true
   image:
@@ -104,8 +125,20 @@ dexServer:
       GITHUB_CLIENT_ID: ""
       # -- GitHub client secret for authentication.
       GITHUB_CLIENT_SECRET: ""
+  service:
+    name: "numaflow-dex-server"
+
+  resources: {}
+  securityContext: {}
+  podSecurityContext: {}
+
+  init:
+    resources: {}
+    securityContext: {}
 
 controller:
+  # -- The name of the controller deployment, can be templatized
+  name: numaflow-controller
   # -- The number of controller replicas to run.
   replicaCount: 1
   podDisruptionBudget:
@@ -122,6 +155,12 @@ controller:
       leaseDuration: 15s
       renewDuration: 10s
       renewPeriod: 2s
+
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 9737
+
+  securityContext: {}
 
   resources:
     limits:
