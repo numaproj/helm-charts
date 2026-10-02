@@ -14,6 +14,8 @@ spec:
       app.kubernetes.io/part-of: numaflow
   template:
     metadata:
+      annotations:
+        checksum/metrics-proxy-config: {{ include (print $.Template.BasePath "/configmaps/numaflow-server-metrics-proxy-config.yaml") . | sha256sum }}
       labels:
         app.kubernetes.io/component: numaflow-ux
         app.kubernetes.io/name: numaflow-ux

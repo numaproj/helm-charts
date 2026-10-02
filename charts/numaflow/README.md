@@ -103,6 +103,18 @@ server:
 
 Set either `minAvailable` or `maxUnavailable`, but not both. To use `maxUnavailable`, set `minAvailable: null`.
 
+### Metrics tab
+
+The Metrics tab in the UI is hidden until the server knows which Prometheus-compatible service to query. Point it at your Prometheus:
+
+```yaml
+server:
+  metricsProxy:
+    url: http://prometheus-operated.monitoring.svc.cluster.local:9090
+```
+
+Changing the URL restarts `numaflow-server`, which reads this setting only at startup.
+
 ### Others values can be overridden using below configuration.
 | Key                                               | Type   | Default                                 | Description                                                                                                              |
 |---------------------------------------------------|--------|-----------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
@@ -147,6 +159,7 @@ Set either `minAvailable` or `maxUnavailable`, but not both. To use `maxUnavaila
 | server.configs.dexServer                          | string | `"http://numaflow-dex-server:5556/dex"` | The address of the Dex server for authentication.                                                                        |
 | server.configs.host                               | string | `"localhost"`                           | The host to listen on for the numaflow server.                                                                           |
 | server.configs.cors.allowedOrigins                | string | `""`                                    | The allowed origins for CORS, defaults to ''.                                                                            |
+| server.metricsProxy.url                           | string | `""`                                    | URL of the Prometheus-compatible service that backs the Metrics tab in the UI; the tab is hidden when empty.             |
 | configs.managedNamespace                          | string | `"numaflow-system"`                     | The namespace that the controller and the UX server watch when "namespaced" is true.                                     |
 | configs.namespacedScope                           | bool   | `false`                                 | Whether to run the controller and the UX server in namespaced scope, defaults to false.                                  |
 | configs.webhook.enabled                           | bool   | `true`                                  | Whether to deploy numaflow server validating webhook, default to true. Note: deploy only when namespacedScope is false.  |
