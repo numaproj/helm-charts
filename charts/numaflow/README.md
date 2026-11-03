@@ -233,3 +233,11 @@ server:
         memory: 64Mi
 
 ```
+
+
+### Dex Configuration
+
+The dex server provided can be configured to point to any OIDC provider, but is configured by default to point to gitlab.
+A full dex configration can be provided by setting `dexServer.configMap.data` as the full YAML configuration.
+Helm references may be used within the YAML (being sure to quote to avoid syntax errors) and during template rendering,
+the helm fields will be processed and the resulting yaml will be used as the dex configuration.
