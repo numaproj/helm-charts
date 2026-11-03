@@ -135,6 +135,26 @@ dexServer:
   init:
     resources: {}
     securityContext: {}
+  configMap:
+    name: "numaflow-dex-server-config"
+    # -- Name of config file that will be mounted. Recommend not changing this value.
+    key: "config.yaml"
+    ## -- Full dex configuration to be put into configmap.
+    ## Write as YAML, helm templating will be applied so other values can be referenced.
+    data:
+      connectors:
+      - type: github
+        # https://dexidp.io/docs/connectors/github/
+        id: github
+        name: GitHub
+        config:
+          clientID: $GITHUB_CLIENT_ID
+          clientSecret: $GITHUB_CLIENT_SECRET
+          orgs:
+            - name: <ORG_NAME>
+              teams:
+                - admin
+                - readonly
 
 controller:
   # -- The name of the controller deployment, can be templatized

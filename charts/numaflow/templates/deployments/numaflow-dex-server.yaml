@@ -42,9 +42,9 @@ spec:
           ports:
             - containerPort: 5556
           volumeMounts:
-            - mountPath: /etc/numaflow/dex/cfg/config.yaml
+            - mountPath: /etc/numaflow/dex/cfg/{{ .Values.dexServer.configMap.key }}
               name: generated-dex-config
-              subPath: config.yaml
+              subPath: {{ .Values.dexServer.configMap.key }}
             - mountPath: /etc/numaflow/dex/tls/tls.crt
               name: tls
               subPath: tls.crt
