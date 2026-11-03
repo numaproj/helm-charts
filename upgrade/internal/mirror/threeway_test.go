@@ -163,6 +163,25 @@ func TestThreeWayMerge_NoUpstreamChange_NoOp(t *testing.T) {
 	}
 }
 
+func TestThreeWayMerge_AlreadyAppliedIsIdempotent(t *testing.T) {
+	// Re-checking a chart that already contains the upstream addition must
+	// reproduce the chart. Replaying that addition onto theirs duplicates it
+	// and either conflicts or corrupts the merge.
+	requireTools(t)
+
+	base := []byte("apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: cmp\ndata:\n  foo: \"1\"\n")
+	theirs := []byte("apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: cmp\ndata:\n  foo: \"1\"\n  bar: \"2\"\n")
+	chart := []byte("apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: cmp\n  labels:\n    {{- include \"numaflow.labels\" . | nindent 4 }}\n  namespace: {{ .Release.Namespace }}\ndata:\n  foo: \"1\"\n  bar: \"2\"\n")
+
+	res := ThreeWayMerge(chart, base, theirs)
+	if res.Outcome != MergeClean {
+		t.Fatalf("want MergeClean, got %s (err: %v)\nmerged:\n%s", res.Outcome, res.Err, res.Merged)
+	}
+	if !bytes.Equal(res.Merged, chart) {
+		t.Fatalf("idempotent merge changed the chart\nwant:\n%s\ngot:\n%s", chart, res.Merged)
+	}
+}
+
 func TestFilterAdditionsOnly(t *testing.T) {
 	// Confirm the diff filter keeps pure-addition hunks and drops hunks with
 	// any deletion line.
@@ -186,5 +205,52 @@ func TestFilterAdditionsOnly(t *testing.T) {
 	}
 	if bytes.Contains(out, []byte("replaced")) {
 		t.Errorf("modification hunk kept:\n%s", out)
+	}
+	if !bytes.HasSuffix(out, []byte("\n")) {
+		t.Errorf("patch must end with a newline so GNU patch accepts it:\n%q", out)
+	}
+	for i, line := range strings.Split(strings.TrimSuffix(string(out), "\n"), "\n") {
+		if line == "" {
+			t.Errorf("blank diff line at %d would be rejected by GNU patch", i+1)
+		}
+	}
+}
+
+func TestFilterChartOnlyAdditions_DropsUpstreamAdditions(t *testing.T) {
+	base := []byte("data:\n  foo: \"1\"\n")
+	theirs := []byte("data:\n  foo: \"1\"\n  bar: \"2\"\n")
+	diff := []byte(
+		"--- a/base.in\n" +
+			"+++ b/ours.in\n" +
+			"@@ -1,0 +2,2 @@\n" +
+			"+  labels:\n" +
+			"+  namespace: kept\n" +
+			"@@ -2,0 +5,1 @@\n" +
+			"+  bar: \"2\"\n")
+	out := filterChartOnlyAdditions(diff, base, theirs)
+	if !bytes.Contains(out, []byte("namespace: kept")) {
+		t.Fatalf("chart-only addition dropped:\n%s", out)
+	}
+	if bytes.Contains(out, []byte("bar:")) {
+		t.Fatalf("upstream addition replayed:\n%s", out)
+	}
+}
+
+func TestFilterChartOnlyAdditions_SplitsMixedHunk(t *testing.T) {
+	base := []byte("data:\n  foo: \"1\"\n")
+	theirs := []byte("data:\n  foo: \"1\"\n  #\n  signal: p99\n")
+	diff := []byte(
+		"--- a\n+++ b\n" +
+			"@@ -2,0 +3,4 @@\n" +
+			"+  url: kept\n" +
+			"+  #\n" +
+			"+  signal: p99\n" +
+			"+  extra: kept\n")
+	out := string(filterChartOnlyAdditions(diff, base, theirs))
+	if !strings.Contains(out, "+  url: kept\n") || !strings.Contains(out, "+  extra: kept\n") {
+		t.Fatalf("chart-only lines dropped:\n%s", out)
+	}
+	if strings.Contains(out, "signal:") {
+		t.Fatalf("upstream lines inside a mixed hunk were replayed:\n%s", out)
 	}
 }
