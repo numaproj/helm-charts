@@ -238,6 +238,11 @@ func processOneFile(opts SyncOptions, m MirroredFile) FileReport {
 	merge := ThreeWayMerge(chartCopy, up.BaseBlob, up.HeadBlob)
 	switch merge.Outcome {
 	case MergeClean:
+		if bytes.Equal(merge.Merged, chartCopy) {
+			rep.Status = ReportStatusNoChange
+			fmt.Fprintf(opts.Out, "  %s: already in sync\n", m.LocalPath)
+			return rep
+		}
 		if opts.Apply {
 			if err := os.WriteFile(chartPath, merge.Merged, 0o644); err != nil {
 				rep.Status = ReportStatusError
