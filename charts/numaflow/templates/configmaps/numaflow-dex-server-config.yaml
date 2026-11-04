@@ -1,23 +1,12 @@
 {{- if .Values.dexServer.enabled }}
 apiVersion: v1
 data:
-  config.yaml: |-
-    connectors:
-      - type: github
-        # https://dexidp.io/docs/connectors/github/
-        id: github
-        name: GitHub
-        config:
-          clientID: $GITHUB_CLIENT_ID
-          clientSecret: $GITHUB_CLIENT_SECRET
-          orgs:
-            - name: <ORG_NAME>
-              teams:
-                - admin
-                - readonly
+  {{/* Converts to JSON in order to be able to use tpl function then finally convert back to YAML */}}
+  {{ .Values.dexServer.configMap.key }}: |-
+    {{- tpl (.Values.dexServer.configMap.data | toJson ) . | fromJson | toYaml | nindent 4 }}
 kind: ConfigMap
 metadata:
-  name: numaflow-dex-server-config
+  name: {{ .Values.dexServer.configMap.name }}
   labels:
     {{- include "numaflow.labels" . | nindent 4 }}
   namespace: {{ .Release.Namespace }}
