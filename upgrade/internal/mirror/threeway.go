@@ -78,8 +78,10 @@ func ThreeWayMerge(chartCopy, base, theirs []byte) MergeResult {
 
 	// Step 1: extract the chart's pure-addition hunks against base. These are
 	// the chart-only lines (labels, namespace, includes, conditional blocks)
-	// that have no upstream counterpart.
-	addPatch, err := chartOnlyAdditionsPatch(scratch, base, tokenized)
+	// that have no upstream counterpart. Additions that already exist in
+	// theirs are upstream changes the chart has absorbed; replaying them
+	// onto theirs corrupts the merge, so they are left out.
+	addPatch, err := chartOnlyAdditionsPatch(scratch, base, tokenized, theirs)
 	if err != nil {
 		return MergeResult{Outcome: MergeErrored, Err: err}
 	}
@@ -112,17 +114,28 @@ func ThreeWayMerge(chartCopy, base, theirs []byte) MergeResult {
 }
 
 // chartOnlyAdditionsPatch computes the diff base -> tokenized and keeps only
-// hunks consisting purely of additions (no `-` lines). The returned bytes are
-// a valid unified diff that can be fed to `patch` to replay the chart's
-// structural additions onto another file.
-func chartOnlyAdditionsPatch(scratch string, base, tokenized []byte) ([]byte, error) {
-	basePath := filepath.Join(scratch, "base.in")
-	oursPath := filepath.Join(scratch, "ours.in")
-	if err := os.WriteFile(basePath, base, 0o600); err != nil {
-		return nil, fmt.Errorf("write base.in: %w", err)
+// hunks consisting purely of additions (no `-` lines). Additions whose lines
+// already appear contiguously in theirs, and not in base, are upstream
+// changes the chart has already taken; they are omitted so a later re-check
+// does not replay them. The returned bytes are a valid unified diff that can
+// be fed to `patch`.
+func chartOnlyAdditionsPatch(scratch string, base, tokenized, theirs []byte) ([]byte, error) {
+	out, err := unifiedDiff(scratch, "base.in", "ours.in", base, tokenized)
+	if err != nil || len(out) == 0 {
+		return nil, err
 	}
-	if err := os.WriteFile(oursPath, tokenized, 0o600); err != nil {
-		return nil, fmt.Errorf("write ours.in: %w", err)
+	return filterChartOnlyAdditions(out, base, theirs), nil
+}
+
+// unifiedDiff runs `diff -U 0`. Exit code 1 (files differ) is success.
+func unifiedDiff(scratch, nameA, nameB string, a, b []byte) ([]byte, error) {
+	pathA := filepath.Join(scratch, nameA)
+	pathB := filepath.Join(scratch, nameB)
+	if err := os.WriteFile(pathA, a, 0o600); err != nil {
+		return nil, fmt.Errorf("write %s: %w", nameA, err)
+	}
+	if err := os.WriteFile(pathB, b, 0o600); err != nil {
+		return nil, fmt.Errorf("write %s: %w", nameB, err)
 	}
 
 	// Use -U 0 so each contiguous edit region becomes its own hunk. That way
@@ -130,62 +143,200 @@ func chartOnlyAdditionsPatch(scratch string, base, tokenized []byte) ([]byte, er
 	// when it sits adjacent to a modification hunk in the chart. With the
 	// default context width, an addition next to a modification gets merged
 	// into a single hunk and the filter would drop both halves.
-	cmd := exec.Command("diff", "-U", "0", basePath, oursPath)
+	cmd := exec.Command("diff", "-U", "0", pathA, pathB)
 	out, err := cmd.Output()
-	// `diff` exits 1 when files differ (the normal case) and 0 when
-	// identical. We only care about exit codes >= 2 (real error).
 	if err != nil {
 		if exit, ok := err.(*exec.ExitError); !ok || exit.ExitCode() >= 2 {
 			return nil, fmt.Errorf("diff failed: %w", err)
 		}
 	}
-	if len(out) == 0 {
-		return nil, nil
-	}
-	return filterAdditionsOnly(out), nil
+	return out, nil
 }
 
 // filterAdditionsOnly walks a unified diff and keeps only hunks that contain
-// no `-` (deletion) lines. The file-pair header is preserved so the output is
-// still a valid patch.
+// no `-` (deletion) lines.
 func filterAdditionsOnly(diff []byte) []byte {
-	lines := strings.Split(string(diff), "\n")
-	var out []string
-	var header []string
-	var hunk []string
-	var hunkHasDeletion bool
+	return filterChartOnlyAdditions(diff, nil, nil)
+}
 
-	flushHunk := func() {
-		if len(hunk) == 0 {
+// filterChartOnlyAdditions keeps pure-addition hunks. When base and theirs
+// are non-nil, hunks whose added lines already occur contiguously in theirs
+// but not in base are dropped. The result always uses a timestamp-free
+// header and a trailing newline so GNU patch accepts it.
+func filterChartOnlyAdditions(diff, base, theirs []byte) []byte {
+	lines := strings.Split(string(diff), "\n")
+	// A trailing newline becomes a final empty element. Leaving it on the
+	// last hunk emits a blank diff line, which GNU patch rejects as
+	// "malformed patch".
+	if len(lines) > 0 && lines[len(lines)-1] == "" {
+		lines = lines[:len(lines)-1]
+	}
+
+	var hunks [][]string
+	var cur []string
+	var curHasDeletion bool
+
+	flush := func() {
+		if len(cur) == 0 {
 			return
 		}
-		if !hunkHasDeletion {
-			out = append(out, hunk...)
+		h := cur
+		deleted := curHasDeletion
+		cur = nil
+		curHasDeletion = false
+		if deleted {
+			return
 		}
-		hunk = nil
-		hunkHasDeletion = false
+		var body []string
+		var added []string
+		for _, line := range h[1:] {
+			if line == "" {
+				continue
+			}
+			body = append(body, line)
+			if strings.HasPrefix(line, "+") && !strings.HasPrefix(line, "+++") {
+				added = append(added, line[1:])
+			}
+		}
+		if len(added) == 0 {
+			return
+		}
+		if base == nil || theirs == nil {
+			hunks = append(hunks, append([]string{h[0]}, body...))
+			return
+		}
+		// A pure-addition hunk can mix chart-only lines (Helm templating)
+		// with an upstream addition the chart already contains. Replay only
+		// the chart-only runs; the upstream lines arrive via the 3-way merge.
+		oldStart, newStart := hunkStarts(h[0])
+		for _, run := range chartOnlyRuns(added, base, theirs) {
+			hunk := []string{fmt.Sprintf("@@ -%d,0 +%d,%d @@", oldStart, newStart, len(run))}
+			for _, line := range run {
+				hunk = append(hunk, "+"+line)
+			}
+			hunks = append(hunks, hunk)
+			newStart += len(run)
+		}
 	}
 
 	for _, line := range lines {
 		switch {
-		case strings.HasPrefix(line, "--- ") || strings.HasPrefix(line, "+++ "):
-			header = append(header, line)
+		case strings.HasPrefix(line, "--- ") || strings.HasPrefix(line, "+++ ") ||
+			strings.HasPrefix(line, "diff --git ") || strings.HasPrefix(line, "index "):
+			continue
 		case strings.HasPrefix(line, "@@"):
-			flushHunk()
-			hunk = []string{line}
-		case len(hunk) > 0:
+			flush()
+			cur = []string{line}
+		case len(cur) > 0:
 			if strings.HasPrefix(line, "-") && !strings.HasPrefix(line, "--- ") {
-				hunkHasDeletion = true
+				curHasDeletion = true
 			}
-			hunk = append(hunk, line)
+			cur = append(cur, line)
 		}
 	}
-	flushHunk()
+	flush()
 
-	if len(out) == 0 {
+	if len(hunks) == 0 {
 		return nil
 	}
-	return []byte(strings.Join(append(header, out...), "\n"))
+	var b strings.Builder
+	b.WriteString("--- a\n+++ b\n")
+	for _, h := range hunks {
+		for _, line := range h {
+			b.WriteString(line)
+			b.WriteByte('\n')
+		}
+	}
+	return []byte(b.String())
+}
+
+// hunkStarts reads the old and new start lines from a unified hunk header.
+func hunkStarts(header string) (oldStart, newStart int) {
+	// @@ -35,0 +39,3 @@
+	rest := strings.TrimPrefix(header, "@@ ")
+	oldStart = leadingInt(strings.TrimPrefix(rest, "-"))
+	if i := strings.Index(rest, "+"); i >= 0 {
+		newStart = leadingInt(rest[i+1:])
+	}
+	if oldStart == 0 {
+		oldStart = 1
+	}
+	if newStart == 0 {
+		newStart = oldStart
+	}
+	return oldStart, newStart
+}
+
+func leadingInt(s string) int {
+	n := 0
+	saw := false
+	for _, c := range s {
+		if c < '0' || c > '9' {
+			break
+		}
+		saw = true
+		n = n*10 + int(c-'0')
+	}
+	if !saw {
+		return 0
+	}
+	return n
+}
+
+// chartOnlyRuns drops contiguous slices of added lines that already exist in
+// theirs and not in base. The remaining slices are chart-only additions.
+func chartOnlyRuns(added []string, base, theirs []byte) [][]string {
+	var runs [][]string
+	var cur []string
+	for i := 0; i < len(added); {
+		if n := longestUpstreamPrefix(added[i:], base, theirs); n > 0 {
+			if len(cur) > 0 {
+				runs = append(runs, cur)
+				cur = nil
+			}
+			i += n
+			continue
+		}
+		cur = append(cur, added[i])
+		i++
+	}
+	if len(cur) > 0 {
+		runs = append(runs, cur)
+	}
+	return runs
+}
+
+// longestUpstreamPrefix returns the longest prefix of added that is a
+// contiguous line sequence in theirs and not in base.
+func longestUpstreamPrefix(added []string, base, theirs []byte) int {
+	best := 0
+	for k := 1; k <= len(added); k++ {
+		if linesAppearContiguous(theirs, added[:k]) && !linesAppearContiguous(base, added[:k]) {
+			best = k
+		}
+	}
+	return best
+}
+
+// linesAppearContiguous reports whether lines occur in order, adjacent, in file.
+func linesAppearContiguous(file []byte, lines []string) bool {
+	if len(lines) == 0 {
+		return false
+	}
+	fileLines := strings.Split(string(file), "\n")
+	for i := 0; i+len(lines) <= len(fileLines); i++ {
+		match := true
+		for j, line := range lines {
+			if fileLines[i+j] != line {
+				match = false
+				break
+			}
+		}
+		if match {
+			return true
+		}
+	}
+	return false
 }
 
 // applyAdditionsPatch applies the chart's additions to one of base/theirs,
